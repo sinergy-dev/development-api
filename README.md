@@ -2,41 +2,59 @@
 
 Dibawah ini akan di descripsikan cara penggunannya
 
-Dashboard Activity
-dashboard/getDashboard [GET]
+## Dashboard Activity
+
+**dashboard/getDashboard** [GET]
+
   Parameter
+
     - id_user: int (mandatory)
     
-dashboard/getJobCategory [GET]
+**dashboard/getJobCategory** [GET]
 
-dashboard/getJobList[GET]
+**dashboard/getJobList** [GET]
 
-dashboard/getJobListSumary[GET]
+**dashboard/getJobListSumary** [GET]
+
   Parameter
+
     - id_job: int (mandatory)
     
-dashboard/getJobListRecomended[GET]
+**dashboard/getJobListRecomended** [GET]
+
   Parameter
+
     - id_engineer: int (mandatory)
 
-Job Activity
+## Job Activity
 
-job/getJobOpen [GET]
+**job/getJobOpen** [GET]
+
   Parameter
+
     - id_job: int (mandatory)
-job/getJobProgress [GET]
+
+**job/getJobProgress** [GET]
+
   Parameter
-    - id_job: int (mandatory
+
+    - id_job: int (mandatory)
+
   Return
+
     - Job(Object)
     - Progress(Array)
 
-Payment Activity
+## Payment Activity
 
-payment/getJobPayment [GET]
+**payment/getJobPayment** [GET]
+
   Parameter
+
     - id_engineer: int (mandatory)
     
-payment/getJobPaymentDetail [GET]
+**payment/getJobPaymentDetail** [GET]
+
   Parameter
+
     - id_payment: int (mandatory)
