@@ -47,7 +47,7 @@ class RestController extends Controller
 	// Dan jika `status` = "Approved" maka akan muncul button start
 
 	public function getJobOpen(Request $req){
-		return Job::find($req->id_job);
+		return Job::with(['customer','category','level','location'])->find($req->id_job);
 	}
 
 	// Untuk function di bawah ini akan mengambil job
