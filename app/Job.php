@@ -29,10 +29,26 @@ class Job extends Model
 	];
 
 	public function customer(){
-		return $this->hasOne('App\Customer','id');
+		return $this->hasOne('App\Customer','id','id_customer');
 	}
 
 	public function progress(){
 		return $this->hasMany('App\Job_history','id_job','id');
+	}
+
+	public function category(){
+		return $this->hasOne('App\Job_category','id','id_category');
+	}
+
+	public function location(){
+		return $this->hasOne('App\Location','id','id_location');
+	}
+
+	public function level(){
+		return $this->hasOne('App\Job_level','id','id_level');
+	}
+
+	public function pic(){
+		return $this->hasOne('App\Job_pic','id','id_pic');
 	}
 }
