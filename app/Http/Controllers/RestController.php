@@ -14,29 +14,29 @@ class RestController extends Controller
 	// Untuk di activity Dashboard
 	// Ada 5 get function
 	public function getDashboard(Request $req){
-		return Users::find($req->id_user);
+		return collect(['users' => Users::find($req->id_user)]);
 	}
 
 	public function getJobCategory(){
-		return Job_category::all();
+		return collect(['job_category' => Job_category::all()]);
 	}
 
 	public function getJobList(){
-		return Job::where('job_status','Open')->get();
+		return collect(['job' => Job::with('category')->where('job_status','Open')->get()]);
 	}
 
 	public function getJobListSumary(Request $req){
-		return Job::with('customer')->find($req->id_job);
+		return collect(['job' => Job::with('customer')->find($req->id_job)]);
 	}
 
 	public function getJobListRecomended(Request $req){
-		return Job::whereIn(
+		return collect(['job' => Job::whereIn(
 			'id_category',
 			Engineer_category::where('id_engineer',$req->id_engineer)
 				->pluck('id_category')
 				->all()
 			)
-		->get();
+		->get()]);
 	}
 
 	// Untuk di activity Job Detail dan Job Progress
@@ -47,22 +47,30 @@ class RestController extends Controller
 	// Dan jika `status` = "Approved" maka akan muncul button start
 
 	public function getJobOpen(Request $req){
-		return Job::with(['customer','category','level','location'])->find($req->id_job);
+		return collect([
+			'job' => Job::with([
+				'customer',
+				'category',
+				'level',
+				'location',
+				'pic'
+			])->find($req->id_job)
+		]);
 	}
 
 	// Untuk function di bawah ini akan mengambil job
 	// berserta array progress di dalamnya
 
 	public function getJobProgress(Request $req){
-		return Job::with('progress')->find($req->id_job);
+		return collect(['job' => Job::with('progress')->find($req->id_job)]);
 	}
 
 	public function getJobPayment(Request $req){
-		return Payment::where('payment_to',$req->id_engineer)->get();
+		return collect(['payment' => Payment::where('payment_to',$req->id_engineer)->get()]);
 	}
 
 	public function getJobPaymentDetail(Request $req){
-		return Payment::with('progress')->find($req->id_payment);
+		return collect(['payment' => Payment::with('progress')->find($req->id_payment)]);
 	}
 
 }
