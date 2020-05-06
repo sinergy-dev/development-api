@@ -4,7 +4,7 @@
     </IfModule>
 
     RewriteEngine On
-	RewriteBase /var/www/html/imogy-api/public/
+	#RewriteBase /var/www/html/development-api/public/
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
