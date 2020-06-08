@@ -21,13 +21,41 @@ Route::get('/job',function(){
 
 Route::get('dashboard/getDashboard','RestController@getDashboard');
 Route::get('dashboard/getJobCategory','RestController@getJobCategory');
+Route::get('dashboard/getJobCategoryAll','RestController@getJobCategoryAll');
+
 Route::get('dashboard/getJobList','RestController@getJobList');
 Route::get('dashboard/getJobListSumary','RestController@getJobListSumary');
+Route::get('dashboard/getJobListAndSumary','RestController@getJobListAndSumary');
 Route::get('dashboard/getJobListRecomended','RestController@getJobListRecomended');
 
+Route::get('job/getJobByCategory','RestController@getJobByCategory');
 Route::get('job/getJobOpen','RestController@getJobOpen');
+Route::get('job/getJopApplyer','RestController@getJopApplyer');
 
 Route::get('job/getJobProgress','RestController@getJobProgress');
 
 Route::get('payment/getJobPayment','RestController@getJobPayment');
 Route::get('payment/getJobPaymentDetail','RestController@getJobPaymentDetail');
+
+Route::post('job/postJobApply','RestController@postJobApply');
+Route::post('job/postJobStart','RestController@postJobStart');
+Route::post('job/postJobUpdate','RestController@postJobUpdate');
+Route::post('job/postJobFinish','RestController@postJobFinish');
+Route::post('job/postApplyerUpdate','RestController@postApplyerUpdate');
+
+Route::post('job/postReviewedByModerator','RestController@postReviewedByModerator');
+Route::post('job/postFinishedByModerator','RestController@postFinishedByModerator');
+Route::post('job/postPayedByModerator','RestController@postPayedByModerator');
+Route::post('job/postUpdatePayment','RestController@postUpdatePayment');
+
+// Web API
+Route::get('job/createJob/getParameterClientAll','RestController@getParameterClientAll');
+Route::get('job/createJob/getParameterLocationAll','RestController@getParameterLocationAll');
+Route::get('job/createJob/getParameterPicAll','RestController@getParameterPicAll');
+Route::get('job/createJob/getParameterLevelAll','RestController@getParameterLevelAll');
+Route::get('job/createJob/getParameterCategoryAll','RestController@getParameterCategoryAll');
+Route::get('job/createJob/getParameterFinalize','RestController@getParameterFinalize');
+Route::post('job/createJob/postPublishJobs','RestController@postPublishJobs');
+
+
+
