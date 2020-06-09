@@ -21,4 +21,8 @@ class Job_history extends Model
 		'date_time',
 		'date_add'
 	];
+
+	public function user(){
+		return $this->hasOne('App\Users','id','id_user');
+	}
 }
