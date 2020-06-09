@@ -28,6 +28,11 @@ class RestController extends Controller
 		return collect(['users' => Users::find($req->id_user)]);
 	}
 
+	public function getDashboard2(Request $req){
+		return $req->user();
+		return collect(['users' => $req->user()->id]);
+	}
+
 	public function getJobCategory(){
 		return collect(['job_category' => Job_category::all()]);
 	}
