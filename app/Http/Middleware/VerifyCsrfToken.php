@@ -13,5 +13,17 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         //
+        'job/postJobApply',
+        'job/postJobStart',
+        'job/postJobUpdate',
+        'job/postJobFinish',
+        'job/createJob/postPublishJobs',
+        'job/postApplyerUpdate',
+        'job/postReviewedByModerator',
+        'job/postFinishedByModerator',
+        'job/postPayedByModerator',
+        'job/postUpdatePay',
+        'job/postPayedByModeratorInvoice',
+
     ];
 }
