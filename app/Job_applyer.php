@@ -20,4 +20,12 @@ class Job_applyer extends Model
 		'status',
 		'date_add'
 	];
+
+	public function user(){
+		return $this->hasOne('App\Users','id','id_engineer');
+	}
+
+	public function working_engineer(){
+		return $this->hasOne('App\Users','id','id_engineer');
+	}
 }
