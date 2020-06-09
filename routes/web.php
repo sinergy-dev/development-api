@@ -46,6 +46,7 @@ Route::post('job/postApplyerUpdate','RestController@postApplyerUpdate');
 Route::post('job/postReviewedByModerator','RestController@postReviewedByModerator');
 Route::post('job/postFinishedByModerator','RestController@postFinishedByModerator');
 Route::post('job/postPayedByModerator','RestController@postPayedByModerator');
+Route::post('job/postPayedByModeratorInvoice','RestController@postPayedByModeratorInvoice');
 Route::post('job/postUpdatePayment','RestController@postUpdatePayment');
 
 // Web API
