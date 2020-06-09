@@ -58,5 +58,9 @@ Route::get('job/createJob/getParameterCategoryAll','RestController@getParameterC
 Route::get('job/createJob/getParameterFinalize','RestController@getParameterFinalize');
 Route::post('job/createJob/postPublishJobs','RestController@postPublishJobs');
 
+// Route::auth();
 
 
+// Auth::routes();
+
+// Route::get('/home', 'HomeController@index')->name('home');
