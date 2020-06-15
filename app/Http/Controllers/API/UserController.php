@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use Illuminate\Http\Request; 
+// use Request;
 use App\Http\Controllers\Controller; 
 use App\User; 
 use Illuminate\Support\Str;
@@ -14,13 +15,13 @@ class UserController extends Controller
     //
     public $successStatus = 200;
 
-    public function login(){ 
-        if(Auth::attempt(['email' => request('email'), 'password' => request('password')])){ 
+    public function login(Request $req){ 
+        if(Auth::attempt(['email' => $req->email, 'password' => $req->password])){ 
             $token = hash('sha256',Str::random(60));
             $user = Auth::user()->where('email',request('email'))->first();
             $user->api_token = $token;
             $user->save();
-            return response()->json(['success' => 200, 'token' => $token], $this->successStatus); 
+            return response()->json(['response' => ['success' => 200, 'token' => $token]], $this->successStatus); 
         } else{ 
             return response()->json(['error'=>'Unauthorised'], 401); 
         } 
