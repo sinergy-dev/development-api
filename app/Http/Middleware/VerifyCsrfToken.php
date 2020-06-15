@@ -24,6 +24,12 @@ class VerifyCsrfToken extends Middleware
         'job/postPayedByModerator',
         'job/postUpdatePay',
         'job/postPayedByModeratorInvoice',
+        'job/postPayedByModeratorFirst',
+        'job/postPayedByModeratorSecond',
+        
+
+
+        // 'dashboard/getDashboard',
 
     ];
 }
