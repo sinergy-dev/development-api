@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Job_category;
 
 class Payment extends Model
 {
@@ -15,12 +16,14 @@ class Payment extends Model
 	public $timestamps = false;
 
 	protected $appends = [
-		'payment_invoice_URL'
+		'payment_invoice_URL',
+		'job_category_image',
 	];
 	
 	protected $fillable = [
 		'id_job',
 		'id_history',
+		'id_payment_account',
 		'payment_to',
 		'payment_from',
 		'payment_nominal',
@@ -43,6 +46,10 @@ class Payment extends Model
 
 	public function job(){
 		return $this->hasOne('App\Job','id','id_job');
+	}
+
+	public function getJobCategoryImageAttribute(){
+		return Job_category::find($this->job->id_category)->category_image_url;
 	}
 
 }
