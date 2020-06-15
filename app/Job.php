@@ -17,7 +17,8 @@ class Job extends Model
 	public $timestamps = false;
 
 	protected $appends = [
-		'working_engineer'
+		'working_engineer',
+		'single_apply_engineer',
 	];
 	
 	protected $fillable = [
@@ -99,16 +100,20 @@ class Job extends Model
 	}
 
 	public function apply_engineer(){
-		return $this->hasMany('App\Job_applyer','id_job','id');
+		return $this->hasMany('App\Job_applyer','id_job','id')->orderBy('status','ASC');
 	}
 
 	public function getWorkingEngineerAttribute(){
 		$job = $this->apply_engineer;
 		
 		if($job->where('status',"Accept")->all()){
-			return $job->where('status',"Accept")->all();
+			return $job->where('status',"Accept")->first();
 		} else {
 			return "Engineer Not Selected";
 		}
+	}
+
+	public function getSingleApplyEngineerAttribute(){
+		return $this->apply_engineer;;
 	}
 }
