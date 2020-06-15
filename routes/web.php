@@ -20,6 +20,7 @@ Route::get('/job',function(){
 });
 
 Route::get('dashboard/getDashboard','RestController@getDashboard');
+// Route::post('dashboard/getDashboard','RestController@getDashboard');
 Route::get('dashboard/getJobCategory','RestController@getJobCategory');
 Route::get('dashboard/getJobCategoryAll','RestController@getJobCategoryAll');
 
@@ -45,7 +46,8 @@ Route::post('job/postApplyerUpdate','RestController@postApplyerUpdate');
 
 Route::post('job/postReviewedByModerator','RestController@postReviewedByModerator');
 Route::post('job/postFinishedByModerator','RestController@postFinishedByModerator');
-Route::post('job/postPayedByModerator','RestController@postPayedByModerator');
+Route::post('job/postPayedByModeratorFirst','RestController@postPayedByModeratorFirst');
+Route::post('job/postPayedByModeratorSecond','RestController@postPayedByModeratorSecond');
 Route::post('job/postPayedByModeratorInvoice','RestController@postPayedByModeratorInvoice');
 Route::post('job/postUpdatePayment','RestController@postUpdatePayment');
 
@@ -58,9 +60,9 @@ Route::get('job/createJob/getParameterCategoryAll','RestController@getParameterC
 Route::get('job/createJob/getParameterFinalize','RestController@getParameterFinalize');
 Route::post('job/createJob/postPublishJobs','RestController@postPublishJobs');
 
-// Route::auth();
+Route::auth();
 
 
-// Auth::routes();
+Auth::routes();
 
-// Route::get('/home', 'HomeController@index')->name('home');
+Route::get('/home', 'HomeController@index')->name('home');
