@@ -15,6 +15,7 @@ use App\Job_pic;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
+use App\Payment_account;
 use App\Customer;
 use App\Location;
 use Carbon\Carbon;
@@ -26,11 +27,6 @@ class RestController extends Controller
 	// Ada 5 get function
 	public function getDashboard(Request $req){
 		return collect(['users' => Users::find($req->id_user)]);
-	}
-
-	public function getDashboard2(Request $req){
-		return $req->user();
-		return collect(['users' => $req->user()->id]);
 	}
 
 	public function getJobCategory(){
@@ -84,7 +80,10 @@ class RestController extends Controller
 
 	public function getJopApplyer(Request $req){
 		return collect([
-			'applyer' => Job_applyer::with('user')->where('id_job',$req->id_job)->get()
+			'applyer' => Job_applyer::with('user')
+				->where('id_job',$req->id_job)
+				->orderBy('status','ASC')
+				->get()
 		]);
 	}
 
@@ -93,7 +92,7 @@ class RestController extends Controller
 
 	public function getJobProgress(Request $req){
 		return collect([
-			'job' => Job::with(['progress','customer','location','level','pic'])->find($req->id_job),
+			'job' => Job::with(['progress','customer','location','level','pic','category'])->find($req->id_job),
 			'progress' => Job_history::with('user')->where('id_job',$req->id_job)->orderBy('date_time','DESC')->get()
 		]);
 	}
@@ -107,8 +106,9 @@ class RestController extends Controller
 	}
 
 	public function getJobByCategory(Request $req){
-		return collect(['job' => Job::with(['category','customer','location'])->get()
-			]);
+		// return collect(['job' => Job::with(['category','customer','location'])->get()]);
+		return collect(['job' => Job::with(['category','customer','location'])->whereIn('id', Job_applyer::where('id_engineer','1')->pluck('id_job'))->get()]);
+		
 	}
 
 	public function postJobApply(Request $req){
@@ -178,6 +178,10 @@ class RestController extends Controller
 
 	public function postApplyerUpdate(Request $req){
 
+		$job = Job::find($req->id_job);
+		$job->job_status = "Ready";
+		$job->save();
+
 		$history = new Job_history();
 		$history->id_job = $req->id_job;
 		$history->id_user = $req->id_moderator;
@@ -229,7 +233,7 @@ class RestController extends Controller
 		$history->save();
 	}
 
-	public function postPayedByModerator(Request $req){
+	public function postPayedByModeratorFirst(Request $req){
 		$history = new Job_history();
 		$history->id_job = $req->id_job;
 		$history->id_user = $req->id_moderator;
@@ -238,13 +242,21 @@ class RestController extends Controller
 		$history->detail_activity = "Moderator make payment";
 		$history->save();
 
+		return collect(["account" => Payment_account::with(['user'])
+			->where('id_user',Job::find($req->id_job)->working_engineer->id_engineer)
+			->get()
+		]);
+	}
+
+	public function postPayedByModeratorSecond(Request $req){
 		$payment = new Payment();
 		$payment->id_job = $req->id_job;
-		$payment->id_history = $history->id;
-		$payment->payment_to = Job::find($req->id_job)->working_engineer[0]->id_engineer;
+		$payment->id_history = Job_history::where('id_job',$req->id_job)->get()->last()->id;
+		$payment->id_payment_account = Payment_account::where('id_user',Job::find($req->id_job)->working_engineer->id_engineer)->first()->id;
+		$payment->payment_to = Job::find($req->id_job)->working_engineer->id_engineer;
 		$payment->payment_from = $req->id_moderator;
 		$payment->payment_nominal = $req->nominal;
-		$payment->payment_method = "Bank Transfer";
+		$payment->payment_method = "";
 		$payment->payment_invoice = "";
 		$payment->date_add = Carbon::now()->toDateTimeString();
 		$payment->save();
@@ -262,6 +274,7 @@ class RestController extends Controller
 	}
 
 	public function postPayedByModeratorInvoice(Request $req){
+		// return $req;
 		$invoice = $req->file('invoice');
 
 		$payment_history = Payment::find($req->id_payment);
@@ -278,6 +291,27 @@ class RestController extends Controller
 		$payment_history->note = "Payment has been sent";
 		$payment_history->created_at = Carbon::now()->toDateTimeString();
 		$payment_history->save();
+
+		$payment_history = new Payment_history();
+		$payment_history->id_payment = $req->id_payment;
+		$payment_history->id_user = Job::find($req->id_job)->working_engineer->id_engineer;
+		$payment_history->date_time = Carbon::now()->toDateTimeString();
+		$payment_history->activity = "Confirm Payment";
+		$payment_history->note = "Payment has been confirm and recived";
+		$payment_history->created_at = Carbon::now()->toDateTimeString();
+		$payment_history->save();
+
+		$history = new Job_history();
+		$history->id_job = $req->id_job;
+		$history->id_user = $req->id_moderator;
+		$history->id_activity = 10;
+		$history->date_time = Carbon::now()->toDateTimeString();
+		$history->detail_activity = "Confirm payment has beed recived";
+		$history->save();
+
+		$job = Job::find($req->id_job);
+		$job->job_status = "Done";
+		$job->save();
 
 		// return $payment_history;
 	}
