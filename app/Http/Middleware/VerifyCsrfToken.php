@@ -26,6 +26,7 @@ class VerifyCsrfToken extends Middleware
         'job/postPayedByModeratorInvoice',
         'job/postPayedByModeratorFirst',
         'job/postPayedByModeratorSecond',
+        'engineer/postNewEngineer',
         
 
 

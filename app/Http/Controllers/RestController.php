@@ -16,10 +16,12 @@ use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
 use App\Payment_account;
+use App\Engineer_location;
 use App\Customer;
 use App\Location;
 use Carbon\Carbon;
 use Auth;
+use Hash;
 
 class RestController extends Controller
 {
@@ -109,6 +111,34 @@ class RestController extends Controller
 		// return collect(['job' => Job::with(['category','customer','location'])->get()]);
 		return collect(['job' => Job::with(['category','customer','location'])->whereIn('id', Job_applyer::where('id_engineer','1')->pluck('id_job'))->get()]);
 		
+	}
+
+	public function getEngineerList(Request $req){
+		return Users::all();
+	}
+
+	public function postNewEngineer(Request $req){
+		$engineer = new Users();
+		$engineer->id_type  = $req->id_type;
+		$engineer->name 	= $req->name_eng;
+		$engineer->email 	= $req->email_eng;
+		$engineer->address 	= $req->adress_eng;
+		$engineer->password = Hash::make("asdasdasd");
+		$engineer->save();
+
+		$engineer_loc = new Engineer_location();
+		$engineer_loc->id_engineer = $engineer->id;
+		$engineer_loc->id_location = $req->id_location;
+		$engineer_loc->date_add    = Carbon::now()->toDateTimeString();
+		$engineer_loc->save();
+
+		$payment_acc = new Payment_account();
+		$payment_acc->id_user = $engineer->id;
+		$payment_acc->account_name = $req->account_name;
+		$payment_acc->account_number = $req->account_number;
+		$payment_acc->save();
+
+		return $engineer;
 	}
 
 	public function postJobApply(Request $req){

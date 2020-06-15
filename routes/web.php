@@ -60,6 +60,11 @@ Route::get('job/createJob/getParameterCategoryAll','RestController@getParameterC
 Route::get('job/createJob/getParameterFinalize','RestController@getParameterFinalize');
 Route::post('job/createJob/postPublishJobs','RestController@postPublishJobs');
 
+Route::get('engineer/getEngineerList','RestController@getEngineerList');
+Route::post('engineer/postNewEngineer','RestController@postNewEngineer');
+
+
+
 Route::auth();
 
 

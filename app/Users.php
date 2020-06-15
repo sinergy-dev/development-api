@@ -19,6 +19,38 @@ class Users extends Model
 		'name',
 		'password',
 		'email',
-		'address'
+		'address',
+		'remember_token',
+		'email_verified_at',
+		'api_token',
+		'created_at',
+		'updated_at'
 	];
+
+	protected $appends = [
+		'location_engineer',
+		'payment_acc_engineer'
+	];
+	
+	public function getLocationEngineerAttribute(){
+		$id_type = $this->id_type;
+		
+		if($id_type == 1){
+			// return Engineer_location:aaaaa:where(‘id_engineer’,$this->id)->first();
+			return Location::where('id',Engineer_location::where('id_engineer',$this->id)->first()['id_location'])->first();
+		} else {
+			return "This user is moderator";
+		}
+	}
+
+	public function getPaymentAccEngineerAttribute(){
+		$id_type = $this->id_type;
+		
+		if($id_type == 1){
+			// return Engineer_location:aaaaa:where(‘id_engineer’,$this->id)->first();
+			return Payment_account::where('id_user',$this->id)->first();
+		} else {
+			return "This user is moderator";
+		}
+	}
 }
