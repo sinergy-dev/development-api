@@ -23,6 +23,11 @@ use Carbon\Carbon;
 use Auth;
 use Hash;
 
+use Kreait\Firebase;
+use Kreait\Firebase\Factory;
+use Kreait\Firebase\ServiceAccount;
+use Kreait\Firebase\Database;
+
 class RestController extends Controller
 {
 	// Untuk di activity Dashboard
@@ -178,6 +183,13 @@ class RestController extends Controller
 		$history->date_time = Carbon::now()->toDateTimeString();
 		$history->detail_activity = ucfirst(explode("@",Users::find($req->id_engineer)->email)[0]) . " Apply job";
 		$history->save();
+
+		sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->id_engineer)->email,
+			ucfirst(explode("@",Users::find($req->id_engineer)->email)[0]) . " Apply job",
+			Job::find($req->id_job)->job_name . " has been applied for, immediately do further checks"
+		)
 
 		return $applyer;
 	}
@@ -432,6 +444,34 @@ class RestController extends Controller
 		$job_history->save();
 		
 		return "Success";
+	}
+
+
+	public function sendNotification($to,$from,$title,$message){
+		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/eod-dev-key.json');
+		$firebase = (new Factory)
+			->withServiceAccount($serviceAccount)
+			->withDatabaseUri(env('FIREBASE_DATABASEURL'))
+			->create();
+
+		$database = $firebase->getDatabase();
+
+		$instanceDatabase = $database
+			->getReference('notification/web-notification/');
+
+		$updateDatabase = $database
+			->getReference('notification/web-notification/' . sizeof($instanceDatabase->getValue()))
+			->set([
+				"to" => $to,
+				"from" => $from,
+				"title" => $title,
+				"message" => $message,
+				"showed" => false,
+				"status" => "unread",
+				"date_time" => Carbon::now()->timestamp
+			]);
+
+		// dd(sizeof($instanceDatabase->getValue()));
 	}
 
 }
