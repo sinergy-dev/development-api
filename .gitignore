@@ -34,7 +34,7 @@ public/report/
 sftp-config.json.backup
 
 # Ignore Firebase-key
-app/Http/Controllers/firebase-key.json
+app/Http/Controllers/eod-dev-key.json
 
 # Ignore Image
 public/img
