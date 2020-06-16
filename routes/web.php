@@ -11,7 +11,7 @@
 |
 */
 
-Route::get('sendNotification','RestController@sendNotification');
+Route::get('sendNotification','API\APIRestController@sendNotification');
 
 Route::get('/', function () {
     return view('welcome');
