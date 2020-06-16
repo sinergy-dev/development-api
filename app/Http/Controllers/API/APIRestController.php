@@ -165,6 +165,15 @@ class APIRestController extends Controller
 		$start_job->job_status = "Progress";
 		$start_job->save();
 
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job started",
+			"Has started the '" . Job::find($req->id_job)->job_name .  "' job, immediately monitoring his activities",
+			$history->id,
+			$req->id_job
+		);
+
 		return $history;
 	}
 
