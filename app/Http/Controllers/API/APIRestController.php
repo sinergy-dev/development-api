@@ -193,6 +193,16 @@ class APIRestController extends Controller
 				)->diffInDays(Carbon::now()
 			) + 1) . " - " . $req->detail_activity;
 		$history->save();
+
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job Update",
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " has updated this job \n[" . Job::find($req->id_job)->job_name . "] " . $req->detail_activity,
+			$history->id,
+			$req->id_job
+		);
+
 		return $history;
 	}
 
