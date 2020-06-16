@@ -11,6 +11,8 @@
 |
 */
 
+Route::get('sendNotification','RestController@sendNotification');
+
 Route::get('/', function () {
     return view('welcome');
 });
