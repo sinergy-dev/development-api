@@ -189,7 +189,7 @@ class RestController extends Controller
 			Users::find($req->id_engineer)->email,
 			ucfirst(explode("@",Users::find($req->id_engineer)->email)[0]) . " Apply job",
 			Job::find($req->id_job)->job_name . " has been applied for, immediately do further checks"
-		)
+		);
 
 		return $applyer;
 	}
@@ -447,7 +447,7 @@ class RestController extends Controller
 	}
 
 
-	public function sendNotification($to,$from,$title,$message){
+	public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b"){
 		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/eod-dev-key.json');
 		$firebase = (new Factory)
 			->withServiceAccount($serviceAccount)
