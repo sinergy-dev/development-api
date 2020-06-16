@@ -144,7 +144,9 @@ class APIRestController extends Controller
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
 			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Apply job",
-			Job::find($req->id_job)->job_name . " has been applied for, immediately do further checks"
+			Job::find($req->id_job)->job_name . " has been applied for, immediately do further checks",
+			$history->id,
+			$req->id_job
 		);
 
 		return $applyer;
@@ -368,21 +370,22 @@ class APIRestController extends Controller
 		return "Success";
 	}
 
-	public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b"){
+	public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b",$id_history = 0,$id_job = 1){
 		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-dev-key.json');
 		$firebase = (new Factory)
 			->withServiceAccount($serviceAccount)
 			->withDatabaseUri(env('FIREBASE_DATABASEURL'))
 			->create();
 
+		$refrence = 'notification/web-notif/';
+
 		$database = $firebase->getDatabase();
 
-		$instanceDatabase = $database
-			->getReference('notification/web-notification/');
+		$instanceDatabase = $database->getReference($refrence);
 
 		$updateDatabase = $database
-			->getReference('notification/web-notification/' . sizeof($instanceDatabase->getValue()))
-			// ->getReference('notification/web-notification/' . )
+			->getReference($refrence . sizeof($instanceDatabase->getValue()))
+			// ->getReference($refrence . 0)
 			->set([
 				"to" => $to,
 				"from" => $from,
@@ -390,10 +393,10 @@ class APIRestController extends Controller
 				"message" => $message,
 				"showed" => false,
 				"status" => "unread",
-				"date_time" => Carbon::now()->timestamp
+				"date_time" => Carbon::now()->timestamp,
+				"history" => $id_history,
+				"job" => $id_job
 			]);
-
-		// dd(sizeof($instanceDatabase->getValue()));
 	}
 
 }
