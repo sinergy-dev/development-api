@@ -117,6 +117,28 @@ class RestController extends Controller
 		return Users::all();
 	}
 
+	public function getClientList(Request $req){
+		return Customer::all();
+	}
+
+	public function postNewClient(Request $req){
+		$client = new Customer();
+		$client->customer_name 	= $req->customer_name;
+		$client->location 		= $req->id_location;
+		$client->date_add 		= Carbon::now()->toDateTimeString();
+		$client->address 		= $req->address;
+		$client->save();
+
+		$job_pic = new Job_pic();
+		$job_pic->pic_name 		= $req->pic_name;
+		$job_pic->pic_phone 	= $req->phone;
+		$job_pic->pic_mail    	= $req->email;
+		$job_pic->date_add 		= Carbon::now()->toDateTimeString();
+		$job_pic->save();
+
+		return $client;
+	}
+
 	public function postNewEngineer(Request $req){
 		$engineer = new Users();
 		$engineer->id_type  = $req->id_type;
