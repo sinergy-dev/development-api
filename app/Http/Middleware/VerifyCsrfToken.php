@@ -18,6 +18,8 @@ class VerifyCsrfToken extends Middleware
         'job/postJobUpdate',
         'job/postJobFinish',
         'job/createJob/postPublishJobs',
+        'job/createJob/postQRRecive',
+        'job/createJob/postPDFRecive',
         'job/postApplyerUpdate',
         'job/postReviewedByModerator',
         'job/postFinishedByModerator',
