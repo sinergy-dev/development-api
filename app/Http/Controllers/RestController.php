@@ -12,6 +12,7 @@ use App\Job_category;
 use App\Job_level;
 use App\Job_category_main;
 use App\Job_pic;
+use App\Job_letter;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
@@ -64,6 +65,15 @@ class RestController extends Controller
 				->all()
 			)
 		->get()]);
+	}
+
+	public function getJobForPDF(Request $req){
+		$job = Job::with(['customer','pic','category','location'])->find($req->id_job);
+		return collect([
+			'job' => $job,
+			'engineer' => Users::find($job->working_engineer->id_engineerF),
+			'last_job_letter' => Job_letter::orderBy('id','DESC')->first()->id
+		]);
 	}
 
 	// Untuk di activity Job Detail dan Job Progress
@@ -457,6 +467,16 @@ class RestController extends Controller
 		$pdf = $req->file('pdf_file');
 
 		$pdf->move("storage/job_pdf/",$pdf->getClientOriginalName());
+	}
+
+	public function postLetter(Request $req){
+		$letter = new Job_letter();
+		$letter->no_letter = $req->no_letter;
+		$letter->qr_file = "storage/image/job_qr/" . $req->qr_file;
+		$letter->pdf_file = "storage/job_pdf/" . $req->pdf_file;
+		$letter->created_by = $req->created_by;
+		$letter->date_add = Carbon::now()->toDateTimeString();
+		$letter->save();
 	}
 
 
