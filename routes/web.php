@@ -36,6 +36,7 @@ Route::get('job/getJobOpen','RestController@getJobOpen');
 Route::get('job/getJopApplyer','RestController@getJopApplyer');
 
 Route::get('job/getJobProgress','RestController@getJobProgress');
+Route::get('job/getJobForPDF','RestController@getJobForPDF');
 
 Route::get('payment/getJobPayment','RestController@getJobPayment');
 Route::get('payment/getJobPaymentDetail','RestController@getJobPaymentDetail');
@@ -63,6 +64,7 @@ Route::get('job/createJob/getParameterFinalize','RestController@getParameterFina
 Route::post('job/createJob/postPublishJobs','RestController@postPublishJobs');
 Route::post('job/createJob/postQRRecive','RestController@postQRRecive');
 Route::post('job/createJob/postPDFRecive','RestController@postPDFRecive');
+Route::post('job/createJob/postLetter','RestController@postLetter');
 
 Route::get('engineer/getEngineerList','RestController@getEngineerList');
 Route::post('engineer/postNewEngineer','RestController@postNewEngineer');
