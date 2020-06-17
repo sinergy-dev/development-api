@@ -29,7 +29,8 @@ class Users extends Model
 
 	protected $appends = [
 		'location_engineer',
-		'payment_acc_engineer'
+		'payment_acc_engineer',
+		'photo_image_url'
 	];
 	
 	public function getLocationEngineerAttribute(){
@@ -52,5 +53,11 @@ class Users extends Model
 		} else {
 			return "This user is moderator";
 		}
+	}
+
+	public function getPhotoImageUrlAttribute() {
+		// storage/image/user_photo/profile(1)-min.jpg
+		// return env('APP_URL') . "/" . $this->photo;
+		return "https://sinergy-dev.xyz/" . $this->photo;
 	}
 }
