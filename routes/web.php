@@ -61,6 +61,8 @@ Route::get('job/createJob/getParameterLevelAll','RestController@getParameterLeve
 Route::get('job/createJob/getParameterCategoryAll','RestController@getParameterCategoryAll');
 Route::get('job/createJob/getParameterFinalize','RestController@getParameterFinalize');
 Route::post('job/createJob/postPublishJobs','RestController@postPublishJobs');
+Route::post('job/createJob/postQRRecive','RestController@postQRRecive');
+Route::post('job/createJob/postPDFRecive','RestController@postPDFRecive');
 
 Route::get('engineer/getEngineerList','RestController@getEngineerList');
 Route::post('engineer/postNewEngineer','RestController@postNewEngineer');
