@@ -214,6 +214,16 @@ class APIRestController extends Controller
 		$history->date_time = Carbon::now()->toDateTimeString();
 		$history->detail_activity = "Finish jobs ready to review";
 		$history->save();
+
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job Finish",
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " has finished this job and ready to review.\n[" . Job::find($req->id_job)->job_name . "]",
+			$history->id,
+			$req->id_job
+		);
+
 		return $history;
 	}
 
