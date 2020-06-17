@@ -447,6 +447,18 @@ class RestController extends Controller
 		return "Success";
 	}
 
+	public function postQRRecive(Request $req){
+		$qr = $req->file('qr_image');
+
+		$qr->move("storage/image/job_qr/",$qr->getClientOriginalName());
+	}
+
+	public function postPDFRecive(Request $req){
+		$pdf = $req->file('pdf_file');
+
+		$pdf->move("storage/job_pdf/",$pdf->getClientOriginalName());
+	}
+
 
 	// public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b",$id_history){
 	// 	$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/eod-dev-key.json');
