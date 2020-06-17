@@ -154,10 +154,14 @@ class RestController extends Controller
 		$engineer->update();
 
 		if ($req->id_location != null) {
-			$engineer_loc = new Engineer_location();
-			$engineer_loc->id_engineer = $req->id;
+			// $engineer_loc = new Engineer_location();
+			// $engineer_loc->id_engineer = $req->id;
+			// $engineer_loc->id_location = $req->id_location;
+			// $engineer_loc->date_add    = Carbon::now()->toDateTimeString();
+			// $engineer_loc->save();
+
+			$engineer_loc = Engineer_location::where('id_engineer',$req->id)->first();
 			$engineer_loc->id_location = $req->id_location;
-			$engineer_loc->date_add    = Carbon::now()->toDateTimeString();
 			$engineer_loc->save();
 		}
 
