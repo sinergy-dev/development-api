@@ -64,6 +64,7 @@ Route::post('job/createJob/postPublishJobs','RestController@postPublishJobs');
 
 Route::get('engineer/getEngineerList','RestController@getEngineerList');
 Route::post('engineer/postNewEngineer','RestController@postNewEngineer');
+Route::post('engineer/updateEngineerData','RestController@updateEngineerData');
 
 Route::get('client/getClientList','RestController@getClientList');
 Route::post('client/postNewClient','RestController@postNewClient');

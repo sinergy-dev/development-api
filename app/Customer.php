@@ -19,6 +19,16 @@ class Customer extends Model
 		'customer_name',
 		'customer_acronym',
 		'customer_description',
-		'date_add'
+		'date_add',
+		'location',
+		'address'
 	];
+
+	protected $appends = [
+		'location_client',
+	];
+	
+	public function getLocationClientAttribute(){
+		return Location::where('id',$this->location)->first();
+	}
 }
