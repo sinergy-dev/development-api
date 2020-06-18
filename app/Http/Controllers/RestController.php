@@ -29,6 +29,10 @@ use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
 use Kreait\Firebase\Database;
 
+use Google\Auth\CredentialsLoader;
+use GuzzleHttp\Client;
+
+
 class RestController extends Controller
 {
 	// Untuk di activity Dashboard
@@ -71,7 +75,7 @@ class RestController extends Controller
 		$job = Job::with(['customer','pic','category','location'])->find($req->id_job);
 		return collect([
 			'job' => $job,
-			'engineer' => Users::find($job->working_engineer->id_engineerF),
+			'engineer' => Users::find($job->working_engineer->id_engineer),
 			'last_job_letter' => Job_letter::orderBy('id','DESC')->first()->id
 		]);
 	}
@@ -477,6 +481,29 @@ class RestController extends Controller
 		$letter->created_by = $req->created_by;
 		$letter->date_add = Carbon::now()->toDateTimeString();
 		$letter->save();
+	}
+
+	public function getTokenToNotification(Request $req){
+		$scope = 'https://www.googleapis.com/auth/firebase.messaging';
+		$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
+
+		$url = env('FIREBASE_FCM_URL');
+		$client = new Client();
+		$token = $req->token;
+		$client->request('POST', $url, [
+			'headers' => [
+				'Content-Type'     => 'application/json',
+				'Authorization'      => 'Bearer ' . $credentials->fetchAuthToken()['access_token']
+			],'json' => [
+				"message" => [
+					"token" => $token,
+					"notification" => [
+						"body" => "This is an FCM notification message!",
+						"title" => "FCM Message"
+					]
+				]
+			]
+		]);
 	}
 
 
