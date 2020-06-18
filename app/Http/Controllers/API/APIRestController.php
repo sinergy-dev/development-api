@@ -420,7 +420,7 @@ class APIRestController extends Controller
 				"from" => $from,
 				"title" => $title,
 				"message" => $message,
-				"showed" => false,
+				"showed" => "false",
 				"status" => "unread",
 				"date_time" => Carbon::now()->timestamp,
 				"history" => $id_history,
