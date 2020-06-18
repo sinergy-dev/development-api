@@ -12,6 +12,7 @@
 */
 
 Route::get('sendNotification','API\APIRestController@sendNotification');
+Route::get('sendNotificationToAndroid','RestController@getTokenToNotification');
 
 Route::get('/', function () {
     return view('welcome');
