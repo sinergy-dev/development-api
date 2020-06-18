@@ -72,7 +72,7 @@ class RestController extends Controller
 	}
 
 	public function getJobForPDF(Request $req){
-		$job = Job::with(['customer','pic','category','location'])->find($req->id_job);
+		$job = Job::with(['customer','pic','category','location','level'])->find($req->id_job);
 		return collect([
 			'job' => $job,
 			'engineer' => Users::find($job->working_engineer->id_engineer),
