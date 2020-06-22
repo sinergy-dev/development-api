@@ -275,8 +275,14 @@ class APIRestController extends Controller
 		$review->job_countermeasure = $req->job_countermeasure;
 		if(isset($req->job_documentation)){
 			$documentation = $req->file('job_documentation');
-			$documentation->move("storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation", $documentation->getClientOriginalName());
-			$review->job_documentation = "storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/" . $documentation->getClientOriginalName();
+			$documentation->storeAs(
+				"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_documentation",
+				$documentation->getClientOriginalName()
+			);
+			// $documentation->move("storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation", $documentation->getClientOriginalName());
+			// $review->job_documentation = "storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/" . $documentation->getClientOriginalName();
+			$review->job_documentation = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_documentation/" . $documentation->getClientOriginalName();
+
 
 		} else {
 			$review->job_documentation = "file";
@@ -312,8 +318,11 @@ class APIRestController extends Controller
     	];
 
 		$pdf = PDF::loadView('pdf.report',compact('data'));
-		$name_report_pdf = "report_" . Carbon::now()->timestamp;
-    	Storage::put("storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/" . $name_report_pdf, $pdf->output());
+		$name_report_pdf = "job_report_" . Carbon::now()->timestamp;
+    	Storage::put("public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_report/" . $name_report_pdf . ".pdf", $pdf->output());
+
+    	$review->job_report = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_report/" . $name_report_pdf . ".pdf";
+    	$review->save();
 		
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
