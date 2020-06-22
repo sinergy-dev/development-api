@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller; 
 use DB;
+use Storage;
 use App\Users;
 use App\Job;
 use App\Job_applyer;
@@ -13,6 +14,8 @@ use App\Job_category;
 use App\Job_level;
 use App\Job_category_main;
 use App\Job_pic;
+use App\Job_review;
+use App\Job_request_item;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
@@ -21,10 +24,14 @@ use App\Location;
 use Carbon\Carbon;
 use Auth;
 
+use App\Http\Controllers\RestController;
+
 use Kreait\Firebase;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
 use Kreait\Firebase\Database;
+
+use PDF;
 
 class APIRestController extends Controller
 {
@@ -206,6 +213,49 @@ class APIRestController extends Controller
 		return $history;
 	}
 
+	public function postJobRequestItem(Request $req){
+		$history = new Job_history();
+		$history->id_job = $req->id_job;
+		$history->id_user = $req->user()->id;
+		$history->id_activity = 5;
+		$history->date_time = Carbon::now()->toDateTimeString();
+		$history->detail_activity = "Update Day " . 
+			(Carbon::parse(
+				Job_history::where('id_user',$req->user()->id)
+					->where('id_activity',4)
+					->where('id_job',$req->id_job)
+					->first()
+					->date_time
+				)->diffInDays(Carbon::now()
+			) + 1) . " - " . ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Item";
+		$history->save();
+
+		$request_item = new Job_request_item();
+		$request_item->id_job = $req->id_job;
+		$request_item->id_engineer = $req->user()->id;
+		$request_item->name_item = $req->name_item;
+		$request_item->function_item = $req->function_item;
+		// $request_item->documentation_item = $req->documentation_item;
+		$request_item->documentation_item = "alamat gambar";
+		// $request_item->status_item = $req->status_item;
+		$request_item->invoice_item = "alamat harga beli";
+		$request_item->status_item = "Requested";
+		$request_item->price_item = $req->price_item;
+		$request_item->date_add = Carbon::now()->toDateTimeString(); 
+		$request_item->save();
+
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Item",
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " make requests for goods to continue work \n[" . Job::find($req->id_job)->job_name . "]",
+			$history->id,
+			$req->id_job
+		);
+
+		return $history;
+	}
+
 	public function postJobFinish(Request $req){
 		$history = new Job_history();
 		$history->id_job = $req->id_job;
@@ -215,6 +265,56 @@ class APIRestController extends Controller
 		$history->detail_activity = "Finish jobs ready to review";
 		$history->save();
 
+
+
+		$review = new Job_review();
+		$review->id_job = $req->id_job;
+		$review->id_history = $history->id;
+		$review->job_summary = $req->job_summary;
+		$review->job_rootcause = $req->job_rootcause;
+		$review->job_countermeasure = $req->job_countermeasure;
+		if(isset($req->job_documentation)){
+			$documentation = $req->file('job_documentation');
+			$documentation->move("storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation", $documentation->getClientOriginalName());
+			$review->job_documentation = "storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/" . $documentation->getClientOriginalName();
+
+		} else {
+			$review->job_documentation = "file";
+		}
+		$review->job_report = "file";
+		$review->date_add = Carbon::now()->toDateTimeString();
+		$review->save();
+
+		$source = new RestController();
+		$source = $source->getJobForLoAPDF($req);
+		$source_review = Job_review::where('id_job',$req->id_job)->first();
+
+		$data = [
+    		"job_title" => $source['job']['job_name'],
+    		"job_category" => $source['job']['category']['category_name'],
+    		"job_location" => $source['job']['location']['long_location'],
+    		"job_address" => $source['job']['job_location'],
+
+    		"job_description" => explode("\n",$source['job']['job_description']),
+    		"job_requirment" => explode("\n",$source['job']['job_requrment']),
+    	
+    		"job_customer" => $source['job']['customer']['customer_name'],
+    		"job_customer_address" => $source['job']['customer']['address'],
+    		"job_pic" => $source['job']['pic']['pic_name'],
+    		"job_pic_phone" => $source['job']['pic']['pic_phone'],
+    		"job_pic_email" => $source['job']['pic']['pic_mail'],
+    		"job_progress" => Job_history::where('id_job',$req->id_job)->get(),
+
+    		"job_summary" => $source_review->job_summary,
+    		"job_rootcause" => $source_review->job_rootcause,
+    		"job_countermeasure" => $source_review->job_countermeasure,
+    		"job_documentation" => $source_review->job_documentation,
+    	];
+
+		$pdf = PDF::loadView('pdf.report',compact('data'));
+		$name_report_pdf = "report_" . Carbon::now()->timestamp;
+    	Storage::put("storage/job_documentation/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/" . $name_report_pdf, $pdf->output());
+		
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
@@ -224,7 +324,7 @@ class APIRestController extends Controller
 			$req->id_job
 		);
 
-		return $history;
+		return $review;
 	}
 
 	public function postApplyerUpdate(Request $req){
