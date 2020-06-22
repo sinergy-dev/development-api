@@ -11,6 +11,12 @@
 |
 */
 
+use Intervention\Image\Facades\Image;
+
+Route::get('testPDFReport','RestController@testPDFReport');
+Route::get('testGetImage',function(){
+	return response()->file(Storage::disk('ftp')->get('aaa.png'));
+});
 Route::get('sendNotification','API\APIRestController@sendNotification');
 Route::get('sendNotificationToAndroid','RestController@getTokenToNotification');
 
@@ -37,7 +43,8 @@ Route::get('job/getJobOpen','RestController@getJobOpen');
 Route::get('job/getJopApplyer','RestController@getJopApplyer');
 
 Route::get('job/getJobProgress','RestController@getJobProgress');
-Route::get('job/getJobForPDF','RestController@getJobForPDF');
+Route::get('job/getJobForLoAPDF','RestController@getJobForLoAPDF');
+Route::get('job/getJobReportPDF','RestController@getJobReportPDF');
 
 Route::get('payment/getJobPayment','RestController@getJobPayment');
 Route::get('payment/getJobPaymentDetail','RestController@getJobPaymentDetail');
