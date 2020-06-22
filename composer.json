@@ -6,6 +6,7 @@
     "type": "project",
     "require": {
         "php": ">=7.0.0",
+        "barryvdh/laravel-dompdf": "^0.8.6",
         "fideloper/proxy": "~3.3",
         "google/auth": "^1.9",
         "guzzlehttp/guzzle": "^6.5",
@@ -13,6 +14,7 @@
         "laravel/framework": "5.5.*",
         "laravel/passport": "~4.0",
         "laravel/tinker": "~1.0",
+        "league/flysystem-sftp": "^1.0",
         "league/oauth2-server": "~6.0",
         "paragonie/random_compat": "~2.0"
     },
