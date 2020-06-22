@@ -13,6 +13,7 @@ use App\Job_level;
 use App\Job_category_main;
 use App\Job_pic;
 use App\Job_letter;
+use App\Job_review;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
@@ -23,6 +24,7 @@ use App\Location;
 use Carbon\Carbon;
 use Auth;
 use Hash;
+use PDF;
 
 use Kreait\Firebase;
 use Kreait\Firebase\Factory;
@@ -31,6 +33,7 @@ use Kreait\Firebase\Database;
 
 use Google\Auth\CredentialsLoader;
 use GuzzleHttp\Client;
+use Storage;
 
 
 class RestController extends Controller
@@ -71,7 +74,7 @@ class RestController extends Controller
 		->get()]);
 	}
 
-	public function getJobForPDF(Request $req){
+	public function getJobForLoAPDF(Request $req){
 		$job = Job::with(['customer','pic','category','location','level'])->find($req->id_job);
 		return collect([
 			'job' => $job,
@@ -353,14 +356,17 @@ class RestController extends Controller
 	}
 
 	public function postPayedByModeratorInvoice(Request $req){
-		// return $req;
 		$invoice = $req->file('invoice');
+		$invoice->storeAs(
+			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/invoice_image",
+			$invoice->getClientOriginalName()
+		);
 
 		$payment_history = Payment::find($req->id_payment);
-		$payment_history->payment_invoice = "storage/image/payment_invoice/" . $invoice->getClientOriginalName();
+		$payment_history->payment_invoice = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/invoice_image/" . $invoice->getClientOriginalName();
 		$payment_history->save();
 
-		$invoice->move("storage/image/payment_invoice/",$invoice->getClientOriginalName());
+		// // $invoice->move("storage/image/payment_invoice/",$invoice->getClientOriginalName());
 
 		$payment_history = new Payment_history();
 		$payment_history->id_payment = $req->id_payment;
@@ -392,7 +398,7 @@ class RestController extends Controller
 		$job->job_status = "Done";
 		$job->save();
 
-		// return $payment_history;
+		return $payment_history;
 	}
 
 	public function getParameterClientAll(){
@@ -464,13 +470,21 @@ class RestController extends Controller
 	public function postQRRecive(Request $req){
 		$qr = $req->file('qr_image');
 
-		$qr->move("storage/image/job_qr/",$qr->getClientOriginalName());
+		$qr->storeAs(
+			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/qr_image",
+			$qr->getClientOriginalName()
+		);
+
+		// $qr->move("storage/image/job_qr/",$qr->getClientOriginalName());
 	}
 
 	public function postPDFRecive(Request $req){
 		$pdf = $req->file('pdf_file');
-
-		$pdf->move("storage/job_pdf/",$pdf->getClientOriginalName());
+		// $pdf->storeAs('asd','asd.pdf');
+		$pdf->storeAs(
+			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/letter_of_assignment",
+			$pdf->getClientOriginalName()
+		);
 	}
 
 	public function postLetter(Request $req){
@@ -504,6 +518,10 @@ class RestController extends Controller
 				]
 			]
 		]);
+	}
+
+	public function getJobReportPDF(Request $req){
+		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles('public/data/56_Backend_20_documentation/job_report/')[0]));
 	}
 
 
