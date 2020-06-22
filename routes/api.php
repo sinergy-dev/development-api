@@ -26,6 +26,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	// Authorization : Bearer 0398c0335fff849bba6ba9bc0e71b1b557f26d4f9ab0412abbd5a56b6c2d5db6
 	
 	// Route::post('details', 'API\UserController@details');
+	Route::get('getTestCredential','API\UserController@credential' );
 	Route::get('dashboard/getDashboard','API\APIRestController@getDashboard' );
 	Route::get('job/getJobByCategory','API\APIRestController@getJobByCategory');
 	Route::get('job/getJobProgress','API\APIRestController@getJobProgress');
@@ -36,6 +37,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('job/postJobFinish','API\APIRestController@postJobFinish');
 	Route::post('job/postJobStart','API\APIRestController@postJobStart');
 	Route::post('job/postJobUpdate','API\APIRestController@postJobUpdate');
+	Route::post('job/postJobRequestItem','API\APIRestController@postJobRequestItem');
 
 	Route::get('payment/getJobPayment','API\APIRestController@getJobPayment');
 	Route::get('payment/getJobPaymentDetail','API\APIRestController@getJobPaymentDetail');
