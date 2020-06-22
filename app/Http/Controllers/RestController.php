@@ -12,6 +12,7 @@ use App\Job_category;
 use App\Job_level;
 use App\Job_category_main;
 use App\Job_pic;
+use App\Job_letter;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
@@ -27,6 +28,10 @@ use Kreait\Firebase;
 use Kreait\Firebase\Factory;
 use Kreait\Firebase\ServiceAccount;
 use Kreait\Firebase\Database;
+
+use Google\Auth\CredentialsLoader;
+use GuzzleHttp\Client;
+
 
 class RestController extends Controller
 {
@@ -64,6 +69,15 @@ class RestController extends Controller
 				->all()
 			)
 		->get()]);
+	}
+
+	public function getJobForPDF(Request $req){
+		$job = Job::with(['customer','pic','category','location','level'])->find($req->id_job);
+		return collect([
+			'job' => $job,
+			'engineer' => Users::find($job->working_engineer->id_engineer),
+			'last_job_letter' => Job_letter::orderBy('id','DESC')->first()->id
+		]);
 	}
 
 	// Untuk di activity Job Detail dan Job Progress
@@ -477,6 +491,51 @@ class RestController extends Controller
 		$job_history->save();
 		
 		return "Success";
+	}
+
+	public function postQRRecive(Request $req){
+		$qr = $req->file('qr_image');
+
+		$qr->move("storage/image/job_qr/",$qr->getClientOriginalName());
+	}
+
+	public function postPDFRecive(Request $req){
+		$pdf = $req->file('pdf_file');
+
+		$pdf->move("storage/job_pdf/",$pdf->getClientOriginalName());
+	}
+
+	public function postLetter(Request $req){
+		$letter = new Job_letter();
+		$letter->no_letter = $req->no_letter;
+		$letter->qr_file = "storage/image/job_qr/" . $req->qr_file;
+		$letter->pdf_file = "storage/job_pdf/" . $req->pdf_file;
+		$letter->created_by = $req->created_by;
+		$letter->date_add = Carbon::now()->toDateTimeString();
+		$letter->save();
+	}
+
+	public function getTokenToNotification(Request $req){
+		$scope = 'https://www.googleapis.com/auth/firebase.messaging';
+		$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
+
+		$url = env('FIREBASE_FCM_URL');
+		$client = new Client();
+		$token = $req->token;
+		$client->request('POST', $url, [
+			'headers' => [
+				'Content-Type'     => 'application/json',
+				'Authorization'      => 'Bearer ' . $credentials->fetchAuthToken()['access_token']
+			],'json' => [
+				"message" => [
+					"token" => $token,
+					"notification" => [
+						"body" => "This is an FCM notification message!",
+						"title" => "FCM Message"
+					]
+				]
+			]
+		]);
 	}
 
 

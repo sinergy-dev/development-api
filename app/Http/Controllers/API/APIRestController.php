@@ -165,6 +165,15 @@ class APIRestController extends Controller
 		$start_job->job_status = "Progress";
 		$start_job->save();
 
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job started",
+			"Has started the '" . Job::find($req->id_job)->job_name .  "' job, immediately monitoring his activities",
+			$history->id,
+			$req->id_job
+		);
+
 		return $history;
 	}
 
@@ -184,6 +193,16 @@ class APIRestController extends Controller
 				)->diffInDays(Carbon::now()
 			) + 1) . " - " . $req->detail_activity;
 		$history->save();
+
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job Update",
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " has updated this job \n[" . Job::find($req->id_job)->job_name . "] " . $req->detail_activity,
+			$history->id,
+			$req->id_job
+		);
+
 		return $history;
 	}
 
@@ -195,6 +214,16 @@ class APIRestController extends Controller
 		$history->date_time = Carbon::now()->toDateTimeString();
 		$history->detail_activity = "Finish jobs ready to review";
 		$history->save();
+
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job Finish",
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " has finished this job and ready to review.\n[" . Job::find($req->id_job)->job_name . "]",
+			$history->id,
+			$req->id_job
+		);
+
 		return $history;
 	}
 
@@ -391,7 +420,7 @@ class APIRestController extends Controller
 				"from" => $from,
 				"title" => $title,
 				"message" => $message,
-				"showed" => false,
+				"showed" => "false",
 				"status" => "unread",
 				"date_time" => Carbon::now()->timestamp,
 				"history" => $id_history,
