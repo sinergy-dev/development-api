@@ -31,6 +31,8 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::get('job/getJobByCategory','API\APIRestController@getJobByCategory');
 	Route::get('job/getJobProgress','API\APIRestController@getJobProgress');
 	Route::get('job/getJobOpen','API\APIRestController@getJobOpen');
+	Route::get('job/getJobReportPDF','API\APIRestController@getJobReportPDF');
+	
 	
 	
 	Route::post('job/postJobApply','API\APIRestController@postJobApply');
