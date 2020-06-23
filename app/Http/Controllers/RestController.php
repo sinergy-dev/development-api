@@ -520,9 +520,7 @@ class RestController extends Controller
 		]);
 	}
 
-	public function getJobReportPDF(Request $req){
-		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles('public/data/56_Backend_20_documentation/job_report/')[0]));
-	}
+	
 
 
 	// public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b",$id_history){
