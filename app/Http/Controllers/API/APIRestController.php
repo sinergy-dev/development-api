@@ -235,9 +235,12 @@ class APIRestController extends Controller
 		$request_item->id_engineer = $req->user()->id;
 		$request_item->name_item = $req->name_item;
 		$request_item->function_item = $req->function_item;
-		// $request_item->documentation_item = $req->documentation_item;
-		$request_item->documentation_item = "alamat gambar";
-		// $request_item->status_item = $req->status_item;
+		$documentation = $req->file('documentation_item');
+		$documentation->storeAs(
+			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/request_item",
+			$documentation->getClientOriginalName()
+		);
+		$request_item->documentation_item = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/request_item/" . $documentation->getClientOriginalName();
 		$request_item->invoice_item = "alamat harga beli";
 		$request_item->status_item = "Requested";
 		$request_item->price_item = $req->price_item;
@@ -535,6 +538,10 @@ class APIRestController extends Controller
 				"history" => $id_history,
 				"job" => $id_job
 			]);
+	}
+
+	public function getJobReportPDF(Request $req){
+		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles('public/data/56_Backend_20_documentation/job_report/')[0]));
 	}
 
 }
