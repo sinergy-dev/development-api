@@ -38,6 +38,8 @@ class Job extends Model
 		'date_add'
 	];
 
+	protected $perPage = 10;
+
 	// protected $visible = [
 	// 	'id_category',
 	// 	'id_customer',
