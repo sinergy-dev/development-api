@@ -64,6 +64,11 @@ class RestController extends Controller
 		return collect(['job' => Job::with(['customer','location','category'])->get()]);
 	}
 
+	public function getJobListAndSumaryPaginate(){
+		// return Job_history::paginate();
+		return Job::with(['customer','location','category'])->paginate();
+	}
+
 	public function getJobListRecomended(Request $req){
 		return collect(['job' => Job::whereIn(
 			'id_category',
