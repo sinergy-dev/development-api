@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 // use Request;
 use App\Http\Controllers\Controller; 
 use App\User; 
+use App\Users; 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth; 
 use Validator;
@@ -25,6 +26,18 @@ class UserController extends Controller
         } else{ 
             return response()->json(['error'=>'Unauthorised'], 401); 
         } 
+    }
+
+    public function token(Request $req){ 
+        // return $req->user()->id;
+        $user = Users::find($req->user()->id);
+        $user->fcm_token = $req->token;
+        $user->save();
+
+        return collect([
+            "message" => "Success FCM Save",
+            // "token" => $req->token,
+        ]);
     }
 
     public function register(Request $request) 
