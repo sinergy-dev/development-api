@@ -23,6 +23,7 @@ class Users extends Model
 		'remember_token',
 		'email_verified_at',
 		'api_token',
+		'fcp_token',
 		'created_at',
 		'updated_at'
 	];
