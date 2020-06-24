@@ -38,6 +38,8 @@ Route::get('dashboard/getJobListSumary','RestController@getJobListSumary');
 Route::get('dashboard/getJobListAndSumary','RestController@getJobListAndSumary');
 Route::get('dashboard/getJobListRecomended','RestController@getJobListRecomended');
 
+Route::get('dashboard/getJobListAndSumary/paginate','RestController@getJobListAndSumaryPaginate');
+
 Route::get('job/getJobByCategory','RestController@getJobByCategory');
 Route::get('job/getJobOpen','RestController@getJobOpen');
 Route::get('job/getJopApplyer','RestController@getJopApplyer');
