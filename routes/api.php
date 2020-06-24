@@ -14,7 +14,10 @@ use Illuminate\Http\Request;
 */
 
 Route::post('api_login', 'API\UserController@login');
+// Route::post('api_token', 'API\UserController@token');
 Route::group(['middleware' => 'auth:api'], function(){
+	Route::post('api_token', 'API\UserController@token');
+	
 
 	// Dibawah ini adalah route yang di lindungi oleh middleware auth:api
 	// Jadi ketika akan mengakses route di bawah ini harus memiliki header
