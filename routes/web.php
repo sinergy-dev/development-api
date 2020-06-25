@@ -39,6 +39,7 @@ Route::get('dashboard/getJobListAndSumary','RestController@getJobListAndSumary')
 Route::get('dashboard/getJobListRecomended','RestController@getJobListRecomended');
 
 Route::get('dashboard/getJobListAndSumary/paginate','RestController@getJobListAndSumaryPaginate');
+Route::post('dashboard/getJobListAndSumary/search','RestController@getJobListAndSumarySearch');
 
 Route::get('job/getJobByCategory','RestController@getJobByCategory');
 Route::get('job/getJobOpen','RestController@getJobOpen');
