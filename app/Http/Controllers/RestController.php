@@ -44,6 +44,17 @@ class RestController extends Controller
 		return collect(['users' => Users::find($req->id_user)]);
 	}
 
+	public function getDashboardModerator(){
+		$count = DB::connection('mysql_dispatcher')->table('job')->select('job_status',DB::raw('COUNT(*) AS `count`'))->groupBy('job_status')->orderBy('job_status','ASC')->get();
+		return collect([
+			'open' => $count[1]->count,
+			'ready' => $count[3]->count,
+			'progress' => $count[2]->count,
+			'done' => $count[0]->count,
+			'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count[3]->count,
+		]);
+	}
+
 	public function getJobCategory(){
 		return collect(['job_category' => Job_category::all()]);
 	}
@@ -64,8 +75,8 @@ class RestController extends Controller
 		return collect(['job' => Job::with(['customer','location','category'])->get()]);
 	}
 
-	public function getJobListAndSumaryPaginate(){
-		return Job::with(['customer','location','category'])->paginate();
+	public function getJobListAndSumaryPaginate(Request $req){
+		return Job::with(['customer','location','category'])->paginate($req->per_page);
 	}
 
 	public function getJobListAndSumarySearch(Request $req){
@@ -87,7 +98,7 @@ class RestController extends Controller
 				$query->orWhere($field, 'LIKE', $searchWildcard);
 			}
 		});
-		return $query->paginate(10)->appends($req->only('search'));
+		return $query->paginate($req->per_page)->appends($req->only('search'));
 	}
 
 	public function getJobListRecomended(Request $req){
