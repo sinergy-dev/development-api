@@ -65,8 +65,29 @@ class RestController extends Controller
 	}
 
 	public function getJobListAndSumaryPaginate(){
-		// return Job_history::paginate();
 		return Job::with(['customer','location','category'])->paginate();
+	}
+
+	public function getJobListAndSumarySearch(Request $req){
+		$query = Job::with(['customer','location','category'])->select("*");
+		$searchFields = ['job_name','job_status','job_description','job_requrment'];
+		$query->where(function($query) use($req, $searchFields){
+			$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+			if(!empty($customer_id)){
+				$query->orWhereRaw('`id_customer` IN (' . implode(",",$customer_id) . ")");
+			}
+
+			$customer_id = Job_category::where('category_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+			if(!empty($customer_id)){
+				$query->orWhereRaw('`id_category` IN (' . implode(",",$customer_id) . ")");
+			}
+
+			$searchWildcard = '%' . $req->search . '%';
+			foreach($searchFields as $field){
+				$query->orWhere($field, 'LIKE', $searchWildcard);
+			}
+		});
+		return $query->paginate(10)->appends($req->only('search'));
 	}
 
 	public function getJobListRecomended(Request $req){
