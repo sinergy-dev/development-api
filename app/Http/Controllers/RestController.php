@@ -360,7 +360,6 @@ class RestController extends Controller
 
 		$this->getTokenToNotification($req->id_engineer);
 
-
 		return $history;
 	}
 
@@ -534,6 +533,13 @@ class RestController extends Controller
 		$job_history->detail_activity = "Moderator Open Job";
 
 		$job_history->save();
+
+		$all_applyer = Users::where('id_type',1)
+			->get();
+
+		foreach ($all_applyer as $all_applyer) {
+			$this->getTokenToNotification($all_applyer->id);
+		}
 		
 		return "Success";
 	}
