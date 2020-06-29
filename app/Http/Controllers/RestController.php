@@ -176,7 +176,7 @@ class RestController extends Controller
 	}
 
 	public function getEngineerList(Request $req){
-		return Users::all();
+		return Users::where('id_type',1)->get();
 	}
 
 	public function getClientList(Request $req){
@@ -201,12 +201,44 @@ class RestController extends Controller
 		return $client;
 	}
 
+	public function updateEngineerData(Request $req){
+		$engineer = Users::where('id',$req->id)->first();
+		$engineer->name 	= $req->name_eng;
+		$engineer->email 	= $req->email_eng;
+		$engineer->phone 	= $req->phone_eng;
+		$engineer->address 	= $req->adress_eng;
+		// $engineer->password = Hash::make("asdasdasd");
+		$engineer->update();
+
+		if ($req->id_location != null) {
+			// $engineer_loc = new Engineer_location();
+			// $engineer_loc->id_engineer = $req->id;
+			// $engineer_loc->id_location = $req->id_location;
+			// $engineer_loc->date_add    = Carbon::now()->toDateTimeString();
+			// $engineer_loc->save();
+
+			$engineer_loc = Engineer_location::where('id_engineer',$req->id)->first();
+			$engineer_loc->id_location = $req->id_location;
+			$engineer_loc->save();
+		}
+
+		$payment_acc = Payment_account::where('id_user',$req->id)->first();
+		$payment_acc->account_name = $req->account_name;
+		$payment_acc->account_number = $req->account_number;
+		$payment_acc->update();
+	}
+
 	public function postNewEngineer(Request $req){
 		$engineer = new Users();
 		$engineer->id_type  = $req->id_type;
 		$engineer->name 	= $req->name_eng;
 		$engineer->email 	= $req->email_eng;
 		$engineer->address 	= $req->adress_eng;
+		$engineer->nik 		= 524345987;
+		$engineer->photo	= "";
+		$engineer->pleace_of_birth 	= "";
+		$engineer->date_of_birth 	= "2000-04-14";
+		$engineer->phone 			= $req->phone_eng;
 		$engineer->password = Hash::make("asdasdasd");
 		$engineer->save();
 
@@ -330,7 +362,6 @@ class RestController extends Controller
 		}
 
 		$this->getTokenToNotification($req->id_engineer);
-
 
 		return $history;
 	}
@@ -505,6 +536,13 @@ class RestController extends Controller
 		$job_history->detail_activity = "Moderator Open Job";
 
 		$job_history->save();
+
+		$all_applyer = Users::where('id_type',1)
+			->get();
+
+		foreach ($all_applyer as $all_applyer) {
+			$this->getTokenToNotification($all_applyer->id);
+		}
 		
 		return "Success";
 	}
