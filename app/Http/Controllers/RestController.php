@@ -76,11 +76,11 @@ class RestController extends Controller
 	}
 
 	public function getJobListAndSumaryPaginate(Request $req){
-		return Job::with(['customer','location','category'])->paginate($req->per_page);
+		return Job::with(['customer','location','category'])->orderBy('id','DESC')->paginate($req->per_page);
 	}
 
 	public function getJobListAndSumarySearch(Request $req){
-		$query = Job::with(['customer','location','category'])->select("*");
+		$query = Job::with(['customer','location','category'])->orderBy('id','DESC')->select("*");
 		$searchFields = ['job_name','job_status','job_description','job_requrment'];
 		$query->where(function($query) use($req, $searchFields){
 			$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
@@ -326,6 +326,8 @@ class RestController extends Controller
 			$applyer_reject->save();
 		}
 
+		$this->getTokenToNotification($req->id_engineer);
+
 
 		return $history;
 	}
@@ -534,13 +536,14 @@ class RestController extends Controller
 		$letter->save();
 	}
 
-	public function getTokenToNotification(Request $req){
+	// public function getTokenToNotification(Request $req){
+	public function getTokenToNotification($to){
 		$scope = 'https://www.googleapis.com/auth/firebase.messaging';
 		$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
 
 		$url = env('FIREBASE_FCM_URL');
 		$client = new Client();
-		$token = $req->token;
+		$token = Users::find($to)->fcm_token;
 		$client->request('POST', $url, [
 			'headers' => [
 				'Content-Type'     => 'application/json',
