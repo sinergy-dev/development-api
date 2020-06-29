@@ -17,6 +17,7 @@ Route::get('testPDFReport','RestController@testPDFReport');
 Route::get('testGetImage',function(){
 	return response()->file(Storage::disk('ftp')->get('aaa.png'));
 });
+Route::get('testStorage','RestController@testStorage');
 Route::get('sendNotification','API\APIRestController@sendNotification');
 Route::get('sendNotificationToAndroid','RestController@getTokenToNotification');
 
