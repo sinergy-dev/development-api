@@ -63,6 +63,16 @@ return [
             'bucket' => env('AWS_BUCKET'),
         ],
 
+        'minio' => [
+            'driver' => 's3',
+            'endpoint' => env('MINIO_ENDPOINT', 'http://127.0.0.1:9005'),
+            'use_path_style_endpoint' => true,
+            'key' => env('MINIO_KEY_ID'),
+            'secret' => env('MINIO_ACCESS_KEY'),
+            'region' => env('MINIO_REGION'),
+            'bucket' => env('MINIO_BUCKET'),
+        ],
+
         'ftp' => [
             'driver' => 'ftp',
             'host' => env('SFTP_HOST'),
