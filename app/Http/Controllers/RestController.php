@@ -35,6 +35,9 @@ use Google\Auth\CredentialsLoader;
 use GuzzleHttp\Client;
 use Storage;
 
+use Aws\S3\S3Client;
+use Image;
+
 
 class RestController extends Controller
 {
@@ -590,5 +593,23 @@ class RestController extends Controller
 
 	// 	// dd(sizeof($instanceDatabase->getValue()));
 	// }
+
+	public function testStorage(){
+		// return response(Storage::disk('minio')->get('meme.jpg'))->header('Content-Type','image/jpeg');
+		// return response(Storage::disk('minio')->get('meme.jpg'))->header('Content-Type','image/jpeg');
+		// return Storage::disk('minio')->mimeType('meme.jpg');
+		return Storage::disk('minio')->response('meme.jpg');
+		// return Image::make(Storage::disk('minio')->get('meme.jpg'));
+		// $s3 = new S3Client([
+		// 	'version' => 'latest',
+		// 	'region'  => 'us-east-1',
+		// 	'endpoint' => env('MINIO_ENDPOINT'),
+		// 	'use_path_style_endpoint' => true,
+		// 	'credentials' => [
+		// 		'key'    => env('MINIO_KEY_ID'),
+		// 		'secret' => env('MINIO_ACCESS_KEY'),
+		// 	],
+		// ]);
+	}
 
 }
