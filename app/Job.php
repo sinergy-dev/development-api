@@ -19,6 +19,7 @@ class Job extends Model
 	protected $appends = [
 		'working_engineer',
 		'single_apply_engineer',
+		'latest_history',
 	];
 	
 	protected $fillable = [
@@ -113,6 +114,11 @@ class Job extends Model
 		} else {
 			return "Engineer Not Selected";
 		}
+	}
+
+	public function getLatestHistoryAttribute(){
+		$history = Job_history::where('id_job',$this->id)->orderBy('date_time','DESC')->first();
+		return collect(['history' => $history,'history_activity' => $history->history_activity->alternate_name,'user_name' => Users::find($history->id_user)->name]);
 	}
 
 	public function getSingleApplyEngineerAttribute(){
