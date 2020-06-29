@@ -11,6 +11,12 @@
 |
 */
 
+use Intervention\Image\Facades\Image;
+
+Route::get('testPDFReport','RestController@testPDFReport');
+Route::get('testGetImage',function(){
+	return response()->file(Storage::disk('ftp')->get('aaa.png'));
+});
 Route::get('sendNotification','API\APIRestController@sendNotification');
 Route::get('sendNotificationToAndroid','RestController@getTokenToNotification');
 
@@ -32,12 +38,15 @@ Route::get('dashboard/getJobListSumary','RestController@getJobListSumary');
 Route::get('dashboard/getJobListAndSumary','RestController@getJobListAndSumary');
 Route::get('dashboard/getJobListRecomended','RestController@getJobListRecomended');
 
+Route::get('dashboard/getJobListAndSumary/paginate','RestController@getJobListAndSumaryPaginate');
+Route::post('dashboard/getJobListAndSumary/search','RestController@getJobListAndSumarySearch');
+
 Route::get('job/getJobByCategory','RestController@getJobByCategory');
 Route::get('job/getJobOpen','RestController@getJobOpen');
 Route::get('job/getJopApplyer','RestController@getJopApplyer');
 
 Route::get('job/getJobProgress','RestController@getJobProgress');
-Route::get('job/getJobForPDF','RestController@getJobForPDF');
+Route::get('job/getJobForLoAPDF','RestController@getJobForLoAPDF');
 
 Route::get('payment/getJobPayment','RestController@getJobPayment');
 Route::get('payment/getJobPaymentDetail','RestController@getJobPaymentDetail');
