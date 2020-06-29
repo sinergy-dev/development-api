@@ -16,6 +16,7 @@ class Job_history_activity extends Model
 	
 	protected $fillable = [
 		'activity_name',
+		'alternate_name',
 		'activity_description',
 		'date_add'
 	];

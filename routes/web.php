@@ -29,6 +29,7 @@ Route::get('/job',function(){
 });
 
 Route::get('dashboard/getDashboard','RestController@getDashboard');
+Route::get('dashboard/getDashboardModerator','RestController@getDashboardModerator');
 // Route::post('dashboard/getDashboard','RestController@getDashboard');
 Route::get('dashboard/getJobCategory','RestController@getJobCategory');
 Route::get('dashboard/getJobCategoryAll','RestController@getJobCategoryAll');

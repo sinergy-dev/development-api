@@ -25,4 +25,8 @@ class Job_history extends Model
 	public function user(){
 		return $this->hasOne('App\Users','id','id_user');
 	}
+
+	public function history_activity(){
+		return $this->hasOne('App\Job_history_activity','id','id_activity');
+	}
 }

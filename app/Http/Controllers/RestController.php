@@ -44,6 +44,17 @@ class RestController extends Controller
 		return collect(['users' => Users::find($req->id_user)]);
 	}
 
+	public function getDashboardModerator(){
+		$count = DB::connection('mysql_dispatcher')->table('job')->select('job_status',DB::raw('COUNT(*) AS `count`'))->groupBy('job_status')->orderBy('job_status','ASC')->get();
+		return collect([
+			'open' => $count[1]->count,
+			'ready' => $count[3]->count,
+			'progress' => $count[2]->count,
+			'done' => $count[0]->count,
+			'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count[3]->count,
+		]);
+	}
+
 	public function getJobCategory(){
 		return collect(['job_category' => Job_category::all()]);
 	}
@@ -64,12 +75,12 @@ class RestController extends Controller
 		return collect(['job' => Job::with(['customer','location','category'])->get()]);
 	}
 
-	public function getJobListAndSumaryPaginate(){
-		return Job::with(['customer','location','category'])->paginate();
+	public function getJobListAndSumaryPaginate(Request $req){
+		return Job::with(['customer','location','category'])->orderBy('id','DESC')->paginate($req->per_page);
 	}
 
 	public function getJobListAndSumarySearch(Request $req){
-		$query = Job::with(['customer','location','category'])->select("*");
+		$query = Job::with(['customer','location','category'])->orderBy('id','DESC')->select("*");
 		$searchFields = ['job_name','job_status','job_description','job_requrment'];
 		$query->where(function($query) use($req, $searchFields){
 			$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
@@ -87,7 +98,7 @@ class RestController extends Controller
 				$query->orWhere($field, 'LIKE', $searchWildcard);
 			}
 		});
-		return $query->paginate(10)->appends($req->only('search'));
+		return $query->paginate($req->per_page)->appends($req->only('search'));
 	}
 
 	public function getJobListRecomended(Request $req){
@@ -347,6 +358,8 @@ class RestController extends Controller
 			$applyer_reject->save();
 		}
 
+		$this->getTokenToNotification($req->id_engineer);
+
 
 		return $history;
 	}
@@ -555,13 +568,14 @@ class RestController extends Controller
 		$letter->save();
 	}
 
-	public function getTokenToNotification(Request $req){
+	// public function getTokenToNotification(Request $req){
+	public function getTokenToNotification($to){
 		$scope = 'https://www.googleapis.com/auth/firebase.messaging';
 		$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
 
 		$url = env('FIREBASE_FCM_URL');
 		$client = new Client();
-		$token = $req->token;
+		$token = Users::find($to)->fcm_token;
 		$client->request('POST', $url, [
 			'headers' => [
 				'Content-Type'     => 'application/json',
