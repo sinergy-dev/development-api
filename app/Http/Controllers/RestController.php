@@ -356,12 +356,16 @@ class RestController extends Controller
 			->where('id_engineer','<>',$req->id_engineer)
 			->get();
 
+		$user = Users::where('id',$req->id_engineer)->select('name')->first();
+
+		$jobs = Job::where('id',$req->id_job)->first();
+
 		foreach ($applyer_rejects as $applyer_reject) {
 			$applyer_reject->status = "Reject";
 			$applyer_reject->save();
 		}
 
-		$this->getTokenToNotification($req->id_engineer);
+		$this->getTokenToNotification($req->id_engineer,'Job Approvement','Congrats!! '.$user->name.', you got a new job ('.$jobs->job_name.')');
 
 		return $history;
 	}
@@ -378,7 +382,7 @@ class RestController extends Controller
 
 		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
 
-		$this->getTokenToNotification($engineer_applyer);
+		$this->getTokenToNotification($engineer_applyer,'Job Reviewed','Hei, your job has been reviewed!');
 	}
 
 	public function postFinishedByModerator(Request $req){
@@ -393,7 +397,7 @@ class RestController extends Controller
 
 		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
 
-		$this->getTokenToNotification($engineer_applyer);
+		$this->getTokenToNotification($engineer_applyer,'Job Finished','Hei, your finished job has been confirmed!');
 	}
 
 	public function postPayedByModeratorFirst(Request $req){
@@ -410,9 +414,9 @@ class RestController extends Controller
 			->get()
 		]);
 
-		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
+		// $engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
 
-		$this->getTokenToNotification($engineer_applyer);
+		// $this->getTokenToNotification($engineer_applyer);
 	}
 
 	public function postPayedByModeratorSecond(Request $req){
@@ -437,9 +441,9 @@ class RestController extends Controller
 		$payment_history->created_at = Carbon::now()->toDateTimeString();
 		$payment_history->save();
 
-		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
+		// $engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
 
-		$this->getTokenToNotification($engineer_applyer);
+		// $this->getTokenToNotification($engineer_applyer);
 
 		return $payment;
 	}
@@ -490,6 +494,10 @@ class RestController extends Controller
 		$job = Job::find($req->id_job);
 		$job->job_status = "Done";
 		$job->save();
+
+		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
+
+		$this->getTokenToNotification($engineer_applyer,'Job Payment','Hei, please checking your job payment!');
 
 		return $payment_history;
 	}
@@ -560,7 +568,7 @@ class RestController extends Controller
 		$all_applyer = Users::where('id_type',1)->get();
 
 		foreach ($all_applyer as $all_applyer) {
-			$this->getTokenToNotification($all_applyer->id);
+			$this->getTokenToNotification($all_applyer->id,'New Job','Hei, There`re new job available!');
 		}
 		
 		return "Success";
@@ -597,7 +605,7 @@ class RestController extends Controller
 	}
 
 	// public function getTokenToNotification(Request $req){
-	public function getTokenToNotification($to){
+	public function getTokenToNotification($to,$messagetitle,$messagebody){
 		$scope = 'https://www.googleapis.com/auth/firebase.messaging';
 		$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
 
@@ -612,8 +620,8 @@ class RestController extends Controller
 				"message" => [
 					"token" => $token,
 					"notification" => [
-						"body" => "This is an FCM notification message!",
-						"title" => "FCM Message"
+						"body" => $messagebody,
+						"title" => $messagetitle,
 					]
 				]
 			]
