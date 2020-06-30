@@ -375,6 +375,10 @@ class RestController extends Controller
 		// $history->detail_activity = "Moderator accept " + ucfirst(explode("@",Users::find($req->id_engineer)->email)[0]) + " Apply";
 		$history->detail_activity = "Jobs has been reviewed";
 		$history->save();
+
+		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
+
+		$this->getTokenToNotification($engineer_applyer);
 	}
 
 	public function postFinishedByModerator(Request $req){
@@ -386,6 +390,10 @@ class RestController extends Controller
 		// $history->detail_activity = "Moderator accept " + ucfirst(explode("@",Users::find($req->id_engineer)->email)[0]) + " Apply";
 		$history->detail_activity = "Jobs has beed confirm by customer";
 		$history->save();
+
+		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
+
+		$this->getTokenToNotification($engineer_applyer);
 	}
 
 	public function postPayedByModeratorFirst(Request $req){
@@ -401,6 +409,10 @@ class RestController extends Controller
 			->where('id_user',Job::find($req->id_job)->working_engineer->id_engineer)
 			->get()
 		]);
+
+		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
+
+		$this->getTokenToNotification($engineer_applyer);
 	}
 
 	public function postPayedByModeratorSecond(Request $req){
@@ -425,15 +437,23 @@ class RestController extends Controller
 		$payment_history->created_at = Carbon::now()->toDateTimeString();
 		$payment_history->save();
 
-		return $payment->id;
+		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
+
+		$this->getTokenToNotification($engineer_applyer);
+
+		return $payment;
 	}
 
 	public function postPayedByModeratorInvoice(Request $req){
+		// return $req->all();
 		$invoice = $req->file('invoice');
+		// return $req->hasFile('image') ? 'true' : 'false';
 		$invoice->storeAs(
 			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/invoice_image",
 			$invoice->getClientOriginalName()
 		);
+
+		// return "a";
 
 		$payment_history = Payment::find($req->id_payment);
 		$payment_history->payment_invoice = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/invoice_image/" . $invoice->getClientOriginalName();
@@ -632,7 +652,30 @@ class RestController extends Controller
 	// }
 
 	public function testStorage(){
+		// return response(Storage::disk('minio')->get('meme.jpg'))->header('Content-Type','image/jpeg');
+		// return response(Storage::disk('minio')->get('meme.jpg'))->header('Content-Type','image/jpeg');
+		// return Storage::disk('minio')->mimeType('meme.jpg');
 		return Storage::disk('minio')->response('meme.jpg');
+		// return Image::make(Storage::disk('minio')->get('meme.jpg'));
+		// $s3 = new S3Client([
+		// 	'version' => 'latest',
+		// 	'region'  => 'us-east-1',
+		// 	'endpoint' => 'http://minio.sinergy.co.id',
+		// 	'use_path_style_endpoint' => true,
+		// 	'scheme'  => 'http',
+		// 	'credentials' => [
+		// 		'key'    => env('MINIO_KEY_ID'),
+		// 		'secret' => env('MINIO_ACCESS_KEY'),
+		// 	],
+		// ]);
+
+		// $retrive = $s3->getObject([
+		// 	'Bucket' => 'testing',
+		// 	'Key'    => 'meme.jpg',
+		// 	'SaveAs' => 'meme.jpg'
+		// ]);
+
+		// return response($retrive['Body']);
 
 	}
 
