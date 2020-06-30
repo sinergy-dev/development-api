@@ -537,8 +537,7 @@ class RestController extends Controller
 
 		$job_history->save();
 
-		$all_applyer = Users::where('id_type',1)
-			->get();
+		$all_applyer = Users::where('id_type',1)->get();
 
 		foreach ($all_applyer as $all_applyer) {
 			$this->getTokenToNotification($all_applyer->id);
@@ -633,21 +632,8 @@ class RestController extends Controller
 	// }
 
 	public function testStorage(){
-		// return response(Storage::disk('minio')->get('meme.jpg'))->header('Content-Type','image/jpeg');
-		// return response(Storage::disk('minio')->get('meme.jpg'))->header('Content-Type','image/jpeg');
-		// return Storage::disk('minio')->mimeType('meme.jpg');
 		return Storage::disk('minio')->response('meme.jpg');
-		// return Image::make(Storage::disk('minio')->get('meme.jpg'));
-		// $s3 = new S3Client([
-		// 	'version' => 'latest',
-		// 	'region'  => 'us-east-1',
-		// 	'endpoint' => env('MINIO_ENDPOINT'),
-		// 	'use_path_style_endpoint' => true,
-		// 	'credentials' => [
-		// 		'key'    => env('MINIO_KEY_ID'),
-		// 		'secret' => env('MINIO_ACCESS_KEY'),
-		// 	],
-		// ]);
+
 	}
 
 }
