@@ -70,7 +70,8 @@ return [
             'key' => env('MINIO_KEY_ID'),
             'secret' => env('MINIO_ACCESS_KEY'),
             'region' => env('MINIO_REGION'),
-            'bucket' => env('MINIO_BUCKET'),
+            'bucket' => env('MINIO_BUCKET')
+            // 'ssl.certificate_authority' => env('MINIO_CACERT')
         ],
 
         'ftp' => [
