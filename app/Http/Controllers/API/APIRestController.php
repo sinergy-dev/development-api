@@ -73,6 +73,12 @@ class APIRestController extends Controller
 		->get()]);
 	}
 
+	public function getProfileDetail(Request $req){
+		return collect([
+			"user" => Users::find($req->user()->id)
+		]);
+	}
+
 	// Untuk di activity Job Detail dan Job Progress
 
 	// Dalam function di bawah ini nanti untuk frontend
