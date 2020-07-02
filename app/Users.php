@@ -32,7 +32,10 @@ class Users extends Model
 		'location_engineer',
 		'payment_acc_engineer',
 		'level_engineer',
-		'photo_image_url'
+		'photo_image_url',
+		'category_engineer',
+		'job_engineer_count',
+		'fee_engineer_count'
 	];
 	
 	public function getLocationEngineerAttribute(){
@@ -72,5 +75,41 @@ class Users extends Model
 		// storage/image/user_photo/profile(1)-min.jpg
 		// return env('APP_URL') . "/" . $this->photo;
 		return "https://sinergy-dev.xyz/" . $this->photo;
+	}
+
+	public function getCategoryEngineerAttribute(){
+		$id_type = $this->id_type;
+		
+		if($id_type == 1){
+			// return Engineer_location:aaaaa:where(‘id_engineer’,$this->id)->first();
+			return implode(", ",Job_category::whereIn('id',Engineer_category::where('id_engineer',$this->id)->get()->pluck('id'))->get()->pluck('category_name')->all());
+		} else {
+			return "This user is moderator";
+		}
+	}
+
+	public function getJobEngineerCountAttribute(){
+		$id_type = $this->id_type;
+		
+		if($id_type == 1){
+			// return Engineer_location:aaaaa:where(‘id_engineer’,$this->id)->first();
+			return Job_applyer::where('id_engineer',$this->id)->where('status','Accept')->count();
+			// return Job_category::whereIn('id',Engineer_category::where('id_engineer',$this->id)->get()->pluck('id'))->get()->pluck('category_name');
+		} else {
+			return "This user is moderator";
+		}
+	}
+
+	public function getFeeEngineerCountAttribute(){
+		$id_type = $this->id_type;
+		
+		if($id_type == 1){
+			// return Engineer_location:aaaaa:where(‘id_engineer’,$this->id)->first();
+			// return array_sum([1,2,3,4]);
+			return array_sum(Job::whereIn('id',Job_applyer::where('id_engineer',$this->id)->where('status','Accept')->pluck('id_job'))->pluck('job_price')->all());
+			// return Job_category::whereIn('id',Engineer_category::where('id_engineer',$this->id)->get()->pluck('id'))->get()->pluck('category_name');
+		} else {
+			return "This user is moderator";
+		}
 	}
 }
