@@ -29,10 +29,14 @@ class VerifyCsrfToken extends Middleware
         'job/postPayedByModeratorInvoice',
         'job/postPayedByModeratorFirst',
         'job/postPayedByModeratorSecond',
+        'job/postStatusRequestItem',
         'engineer/postNewEngineer',
-        'client/postNewClient',
         'engineer/updateEngineerData',
+        'client/postNewClient',
         'dashboard/getJobListAndSumary/search',
+        'dashboard/getJobListAndSumary/FilterStatus',
+        'join/advancedJoinForm',
+        
      
 
 

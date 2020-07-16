@@ -29,4 +29,8 @@ class Job_history extends Model
 	public function history_activity(){
 		return $this->hasOne('App\Job_history_activity','id','id_activity');
 	}
+
+	public function request_item(){
+		return $this->hasOne('App\Job_request_item','id_history','id');
+	}
 }

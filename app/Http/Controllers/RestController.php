@@ -22,6 +22,7 @@ use App\Engineer_location;
 use App\Customer;
 use App\Location;
 use Carbon\Carbon;
+use App\Job_request_item;
 use Auth;
 use Hash;
 use PDF;
@@ -49,13 +50,62 @@ class RestController extends Controller
 
 	public function getDashboardModerator(){
 		$count = DB::connection('mysql_dispatcher')->table('job')->select('job_status',DB::raw('COUNT(*) AS `count`'))->groupBy('job_status')->orderBy('job_status','ASC')->get();
-		return collect([
-			'open' => $count[1]->count,
-			'ready' => $count[3]->count,
-			'progress' => $count[2]->count,
-			'done' => $count[0]->count,
-			'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count[3]->count,
-		]);
+
+		$count_open = DB::connection('mysql_dispatcher')->table('job')
+					->where('job_status','Open')->count();
+
+		$count_ready = DB::connection('mysql_dispatcher')->table('job')
+		->where('job_status','Ready')->count();
+
+		$count_progress = DB::connection('mysql_dispatcher')->table('job')
+					->where('job_status','Progress')->count();
+
+		$count_done = DB::connection('mysql_dispatcher')->table('job')
+					->where('job_status','Done')->count();
+
+		if ($count_open == 0) {
+			return collect([
+				'open' => $count_open,
+				'ready' => $count[1]->count,
+				'progress' => $count[0]->count,
+				'done' => $count[2]->count,
+				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_open,
+			]);
+		
+		}else if ($count_ready == 0) {
+			return collect([
+				'open' => $count[1]->count,
+				'ready' => $count_ready,
+				'progress' => $count[2]->count,
+				'done' => $count[0]->count,
+				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_ready,
+			]);
+		
+		}else if ($count_progress == 0) {
+			return collect([
+				'open' => $count[0]->count,
+				'ready' => $count[1]->count,
+				'progress' => $count_progress,
+				'done' => $count[2]->count,
+				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_progress,
+			]);
+		
+		}else if ($count_done == 0) {
+			return collect([
+				'open' => $count[0]->count,
+				'ready' => $count[1]->count,
+				'progress' => $count[2]->count,
+				'done' => $count_done,
+				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_done,
+			]);
+		
+		}
+	}
+
+	public function getTopEngineer(){
+		$count = DB::connection('mysql_dispatcher')->table('users')->join('job_applyer','job_applyer.id_engineer','=','users.id')->join('job','job.id','=','job_applyer.id_job')->select('users.name','users.date_of_join','photo',DB::raw('COUNT(`status`) AS count'),DB::raw('SUM(`job_price`) as job_price'))->where('status','Accept')->groupBy('job_applyer.id_engineer')->orderBy('count','DESC')->limit('4')->get();
+
+		return $count;
 	}
 
 	public function getJobCategory(){
@@ -79,12 +129,42 @@ class RestController extends Controller
 	}
 
 	public function getJobListAndSumaryPaginate(Request $req){
-		return Job::with(['customer','location','category'])->orderBy('id','DESC')->paginate($req->per_page);
+		// return Job::with(['customer','location','category'])->orderBy('id_job','DESC')->paginate($req->per_page);
+		return Job::with(['customer','location','category'])
+		->orderByRaw('FIELD(job_status,
+        "Open",
+        "Ready",
+        "Progress",
+        "Done")')
+        ->paginate($req->per_page);
+		
 	}
 
 	public function getJobListAndSumarySearch(Request $req){
 		$query = Job::with(['customer','location','category'])->orderBy('id','DESC')->select("*");
 		$searchFields = ['job_name','job_status','job_description','job_requrment'];
+		$query->where(function($query) use($req, $searchFields){
+			$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+			if(!empty($customer_id)){
+				$query->orWhereRaw('`id_customer` IN (' . implode(",",$customer_id) . ")");
+			}
+
+			$customer_id = Job_category::where('category_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+			if(!empty($customer_id)){
+				$query->orWhereRaw('`id_category` IN (' . implode(",",$customer_id) . ")");
+			}
+
+			$searchWildcard = '%' . $req->search . '%';
+			foreach($searchFields as $field){
+				$query->orWhere($field, 'LIKE', $searchWildcard);
+			}
+		});
+		return $query->paginate($req->per_page)->appends($req->only('search'));
+	}
+
+	public function getJobListAndSumaryFilterStatus(Request $req){
+		$query = Job::with(['customer','location','category'])->orderBy('id','DESC')->select("*");
+		$searchFields = ['job_status'];
 		$query->where(function($query) use($req, $searchFields){
 			$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
 			if(!empty($customer_id)){
@@ -157,7 +237,7 @@ class RestController extends Controller
 	public function getJobProgress(Request $req){
 		return collect([
 			'job' => Job::with(['progress','customer','location','level','pic','category'])->find($req->id_job),
-			'progress' => Job_history::with('user')->where('id_job',$req->id_job)->orderBy('date_time','DESC')->get()
+			'progress' => Job_history::with(['user','request_item'])->where('id_job',$req->id_job)->orderBy('date_time','DESC')->get()
 		]);
 	}
 
@@ -176,11 +256,46 @@ class RestController extends Controller
 	}
 
 	public function getEngineerList(Request $req){
-		return Users::where('id_type',1)->get();
+		return Users::where('id_type',1)->paginate($req->per_page);
+	}
+
+	public function getEngineerListSearch(Request $req){
+		$query = Users::orderBy('id','DESC')->select("*");
+		$searchFields = ['name','email','phone','address'];
+		$query->where(function($query) use($req, $searchFields){
+
+			$searchWildcard = '%' . $req->search . '%';
+			foreach($searchFields as $field){
+				$query->orWhere($field, 'LIKE', $searchWildcard);
+			}
+		});
+		return $query->paginate($req->per_page)->appends($req->only('search'));
 	}
 
 	public function getClientList(Request $req){
-		return Customer::all();
+		return Customer::paginate($req->per_page);
+	}
+
+	public function getClientListSearch(Request $req){
+		$query = Customer::orderBy('id','DESC')->select("*");
+		$searchFields = ['customer_name','address'];
+		$query->where(function($query) use($req, $searchFields){
+			$location_id = Location::where('location_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+			if(!empty($location_id)){
+				$query->orWhereRaw('`location` IN (' . implode(",",$location_id) . ")");
+			}
+
+
+			$searchWildcard = '%' . $req->search . '%';
+			foreach($searchFields as $field){
+				$query->orWhere($field, 'LIKE', $searchWildcard);
+			}
+		});
+		return $query->paginate($req->per_page)->appends($req->only('search'));
+	}
+
+	public function getRequestitem(Request $req){
+		return Job_request_item::with(['user'])->where('id_history', $req->id_history)->get();
 	}
 
 	public function postNewClient(Request $req){
@@ -199,6 +314,24 @@ class RestController extends Controller
 		$job_pic->save();
 
 		return $client;
+	}
+
+	public function postStatusRequestItem(Request $req){
+		if ($req->status == 'approve') {
+
+			$request_item = Job_request_item::where('id_history',$req->id_history)->first();
+			$request_item->status_item = 'Accepted';
+			$request_item->update();
+
+		}else{
+
+			$request_item = Job_request_item::where('id_history',$req->id_history)->first();
+			$request_item->status_item = 'Rejected';
+			$request_item->update();
+		}
+		
+
+		return 'Success';
 	}
 
 	public function updateEngineerData(Request $req){
@@ -596,9 +729,11 @@ class RestController extends Controller
 
 	public function postLetter(Request $req){
 		$letter = new Job_letter();
+		$letter->id_job = $req->id_job;
 		$letter->no_letter = $req->no_letter;
-		$letter->qr_file = "storage/image/job_qr/" . $req->qr_file;
-		$letter->pdf_file = "storage/job_pdf/" . $req->pdf_file;
+		$letter->qr_file = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/qr_image/" . $req->qr_file;
+		$letter->pdf_file = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/letter_of_assignment/" . $req->pdf_file;
+
 		$letter->created_by = $req->created_by;
 		$letter->date_add = Carbon::now()->toDateTimeString();
 		$letter->save();

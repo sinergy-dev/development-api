@@ -12,11 +12,54 @@
 */
 
 use Intervention\Image\Facades\Image;
+use Illuminate\Http\Request;
 
 Route::get('testPDFReport','RestController@testPDFReport');
 Route::get('testGetImage',function(){
 	return response()->file(Storage::disk('ftp')->get('aaa.png'));
 });
+
+Route::get('testString',function(){
+	return "This is string from testString method";
+});
+
+Route::get('arrayTableDynamic',function(){
+	return App\Users::select('id','name','email')->get()->all();
+	return collect([
+        ["name" => "Rama","email"=> "agastya@sinergy.co.id"],
+        ["name" => "Bril","email"=> "brillyan@sinergy.co.id"],
+        ["name" => "Dinar","email"=> "ladinar@sinergy.co.id"],
+        ["name" => "Faiqoh","email"=> "faiqoh@sinergy.co.id"],
+        ["name" => "Tito","email"=> "tito@sinergy.co.id"]
+    ]);
+});
+
+// Route::get('arrayTableDynamic',function(){
+// 	return collect([
+// 		'name' => 'Rama Agastya',
+// 		'email' => 'agastya@sinergy.co.id',
+// 		'username' => 'rama11',
+// 		'address' => 'Jl Jend Gatot Subroto Kav 56 Ged Adhi Graha Lt 15 Suite 1501'
+// 	]);
+// });
+
+Route::get('arrayTableDynamicSpecific',function(Request $req){
+	$user = App\Users::find($req->id);
+	return collect([
+		'name' => $user->name,
+		'email' => $user->email,
+		'username' => $user->name . $user->id,
+		'address' => $user->address
+	]);
+	return $user->name;
+	return collect([
+		'name' => 'Rama Agastya',
+		'email' => 'agastya@sinergy.co.id',
+		'username' => 'rama11',
+		'address' => 'Jl Jend Gatot Subroto Kav 56 Ged Adhi Graha Lt 15 Suite 1501'
+	]);
+});
+
 Route::get('testStorage','RestController@testStorage');
 Route::get('sendNotification','API\APIRestController@sendNotification');
 Route::get('sendNotificationToAndroid','RestController@getTokenToNotification');
@@ -31,6 +74,7 @@ Route::get('/job',function(){
 
 Route::get('dashboard/getDashboard','RestController@getDashboard');
 Route::get('dashboard/getDashboardModerator','RestController@getDashboardModerator');
+Route::get('dashboard/getTopEngineer','RestController@getTopEngineer');
 // Route::post('dashboard/getDashboard','RestController@getDashboard');
 Route::get('dashboard/getJobCategory','RestController@getJobCategory');
 Route::get('dashboard/getJobCategoryAll','RestController@getJobCategoryAll');
@@ -42,6 +86,7 @@ Route::get('dashboard/getJobListRecomended','RestController@getJobListRecomended
 
 Route::get('dashboard/getJobListAndSumary/paginate','RestController@getJobListAndSumaryPaginate');
 Route::post('dashboard/getJobListAndSumary/search','RestController@getJobListAndSumarySearch');
+Route::post('dashboard/getJobListAndSumary/FilterStatus','RestController@getJobListAndSumaryFilterStatus');
 
 Route::get('job/getJobByCategory','RestController@getJobByCategory');
 Route::get('job/getJobOpen','RestController@getJobOpen');
@@ -79,11 +124,18 @@ Route::post('job/createJob/postPDFRecive','RestController@postPDFRecive');
 Route::post('job/createJob/postLetter','RestController@postLetter');
 
 Route::get('engineer/getEngineerList','RestController@getEngineerList');
+Route::get('engineer/getEngineerList/search','RestController@getEngineerListSearch');
 Route::post('engineer/postNewEngineer','RestController@postNewEngineer');
 Route::post('engineer/updateEngineerData','RestController@updateEngineerData');
 
 Route::get('client/getClientList','RestController@getClientList');
+Route::get('client/getClientList/search','RestController@getClientListSearch');
 Route::post('client/postNewClient','RestController@postNewClient');
+
+Route::get('job/getStatusRequestItem','RestController@getRequestitem');
+Route::post('job/postStatusRequestItem','RestController@postStatusRequestItem');
+
+Route::post('join/advancedJoinForm','RestController@postAdvancedJoin');
 
 
 

@@ -20,6 +20,7 @@ class Job extends Model
 		'working_engineer',
 		'single_apply_engineer',
 		'latest_history',
+		'letter_of_assignment',
 	];
 	
 	protected $fillable = [
@@ -123,5 +124,18 @@ class Job extends Model
 
 	public function getSingleApplyEngineerAttribute(){
 		return $this->apply_engineer;;
+	}
+
+	public function getLetterOfAssignmentAttribute(){
+		if($this->job_status != "Open"){
+			$pdf_file = Job_letter::where('id_job',$this->id)->first();
+			if (!is_null($pdf_file)) {
+				return env('API_LINK_CUSTOM2') . "/" . $pdf_file->pdf_file;
+			} else {
+				return "https://sinergy-dev.xyz";
+			}
+		} else {
+			return "Job not ready yet";
+		}
 	}
 }

@@ -24,7 +24,7 @@ class UserController extends Controller
             $user->save();
             return response()->json(['response' => ['success' => 200, 'token' => $token]], $this->successStatus); 
         } else{ 
-            return response()->json(['error'=>'Unauthorised'], 401); 
+            return response()->json(['response' => ['success' => 401, 'message' => 'Unauthorised']],401 ); 
         } 
     }
 

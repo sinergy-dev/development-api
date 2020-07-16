@@ -15,6 +15,7 @@ class Job_request_item extends Model
 	protected $primaryKey = 'id';
 	
 	public $timestamps = false;
+	
 
 	// protected $appends = [
 	// 	'working_engineer',
@@ -32,5 +33,11 @@ class Job_request_item extends Model
 		'price_item',
 		'date_add'
 	];
+
+	public function user(){
+		return $this->hasOne('App\Users','id','id_engineer');
+	}
+
+
 
 }
