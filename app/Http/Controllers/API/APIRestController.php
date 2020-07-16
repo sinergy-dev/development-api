@@ -241,6 +241,7 @@ class APIRestController extends Controller
 		$request_item->id_engineer = $req->user()->id;
 		$request_item->name_item = $req->name_item;
 		$request_item->function_item = $req->function_item;
+		$request_item->id_history = $history->id;
 		$documentation = $req->file('documentation_item');
 		$documentation->storeAs(
 			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/request_item",
