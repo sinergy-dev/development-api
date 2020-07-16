@@ -14,6 +14,10 @@ class Customer extends Model
 	protected $primaryKey = 'id';
 	
 	public $timestamps = false;
+
+	protected $appends = [
+		'location_client',
+	];
 	
 	protected $fillable = [
 		'customer_name',
@@ -22,10 +26,6 @@ class Customer extends Model
 		'date_add',
 		'location',
 		'address'
-	];
-
-	protected $appends = [
-		'location_client',
 	];
 	
 	public function getLocationClientAttribute(){
