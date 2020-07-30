@@ -43,6 +43,9 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('job/postJobStart','API\APIRestController@postJobStart');
 	Route::post('job/postJobUpdate','API\APIRestController@postJobUpdate');
 	Route::post('job/postJobRequestItem','API\APIRestController@postJobRequestItem');
+	Route::post('job/postJobRequestSupport','API\APIRestController@postJobRequestSupport');
+	Route::get('job/getJobSupport','API\APIRestController@getJobSupport');
+	Route::get('job/getJobSupportEach','API\APIRestController@getJobSupportEach');
 
 	Route::get('payment/getJobPayment','API\APIRestController@getJobPayment');
 	Route::get('payment/getJobPaymentDetail','API\APIRestController@getJobPaymentDetail');
