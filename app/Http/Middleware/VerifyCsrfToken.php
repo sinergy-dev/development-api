@@ -35,7 +35,15 @@ class VerifyCsrfToken extends Middleware
         'client/postNewClient',
         'dashboard/getJobListAndSumary/search',
         'dashboard/getJobListAndSumary/FilterStatus',
-        'join/advancedJoinForm',
+        'join/postBasicJoin',
+        'join/postAdvancedJoin',
+        'join/postSubmitPartner',
+        'join/postScheduleInterview',
+        'join/postStartInterview',
+        'join/postResultInterview',
+        'join/postAgreementInterview',
+        'join/postPartnerAgreement',
+        'partner/getNewPartnerIdentifier'
         
      
 
