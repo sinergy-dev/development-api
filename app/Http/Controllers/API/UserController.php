@@ -22,7 +22,13 @@ class UserController extends Controller
             $user = Auth::user()->where('email',request('email'))->first();
             $user->api_token = $token;
             $user->save();
-            return response()->json(['response' => ['success' => 200, 'token' => $token]], $this->successStatus); 
+            return response()->json([
+                'response' => [
+                    'success' => 200,
+                    'id_user' => $user->id,
+                    'token' => $token
+                ]
+            ], $this->successStatus); 
         } else{ 
             return response()->json(['response' => ['success' => 401, 'message' => 'Unauthorised']],401 ); 
         } 
