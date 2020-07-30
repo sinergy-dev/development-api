@@ -12,6 +12,18 @@ class User extends Authenticatable
 
     protected $connection= 'mysql_dispatcher';
 
-    /**
-     * The attributes that are mass assignable.
-     *
+	protected $table = 'user';
+	
+	protected $primaryKey = 'id';
+	
+	public $timestamps = false;
+	
+	protected $fillable = [
+		'id_type',
+		'name',
+		'password',
+		'email',
+		'address',
+		'api_token'
+	];
+}
