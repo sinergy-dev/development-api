@@ -42,3 +42,5 @@ public/img
 public/image
 
 
+# Ignore MacOS Generate File
+._*
