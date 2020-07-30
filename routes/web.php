@@ -23,6 +23,8 @@ Route::get('testString',function(){
 	return "This is string from testString method";
 });
 
+Route::post('partner/getNewPartnerIdentifier','RestController@getNewPartnerIdentifier');
+
 Route::get('arrayTableDynamic',function(){
 	return App\Users::select('id','name','email')->get()->all();
 	return collect([
@@ -62,7 +64,7 @@ Route::get('arrayTableDynamicSpecific',function(Request $req){
 
 Route::get('testStorage','RestController@testStorage');
 Route::get('sendNotification','API\APIRestController@sendNotification');
-Route::get('sendNotificationToAndroid','RestController@getTokenToNotification');
+Route::get('sendNotificationToAndroid','RestController@getTokenToNotification2');
 
 Route::get('/', function () {
     return view('welcome');
@@ -135,8 +137,18 @@ Route::post('client/postNewClient','RestController@postNewClient');
 Route::get('job/getStatusRequestItem','RestController@getRequestitem');
 Route::post('job/postStatusRequestItem','RestController@postStatusRequestItem');
 
-Route::post('join/advancedJoinForm','RestController@postAdvancedJoin');
-
+Route::post('join/postBasicJoin','RestController@postBasicJoin');
+Route::post('join/postAdvancedJoin','RestController@postAdvancedJoin');
+Route::post('join/postSubmitPartner','RestController@postSubmitPartner');
+Route::post('join/postScheduleInterview','RestController@postScheduleInterview');
+Route::post('join/postStartInterview','RestController@postStartInterview');
+Route::post('join/postResultInterview','RestController@postResultInterview');
+Route::post('join/postAgreementInterview','RestController@postAgreementInterview');
+Route::post('join/postPartnerAgreement','RestController@postPartnerAgreement');
+Route::get('partner/getNewPartnerList','RestController@getNewPartnerList');
+Route::get('partner/getDetailPartnerList','RestController@getDetailPartnerList');
+Route::get('partner/getPartnerList/search','RestController@getPartnerListSearch');
+Route::get('partner/getNewPartnerSelectedList','RestController@getNewPartnerSelectedList');
 
 
 Route::auth();
