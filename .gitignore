@@ -44,3 +44,4 @@ public/image
 
 # Ignore MacOS Generate File
 ._*
+.DS*
