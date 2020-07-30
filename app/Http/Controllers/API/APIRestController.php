@@ -16,6 +16,7 @@ use App\Job_category_main;
 use App\Job_pic;
 use App\Job_review;
 use App\Job_request_item;
+use App\Job_request_support;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
@@ -259,6 +260,64 @@ class APIRestController extends Controller
 			Users::find($req->user()->id)->email,
 			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Item",
 			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " make requests for goods to continue work \n[" . Job::find($req->id_job)->job_name . "]",
+			$history->id,
+			$req->id_job
+		);
+
+		return $history;
+	}
+
+	public function getJobSupport(Request $req){
+		return collect([
+			"job_support" => Job_request_support::with('job')->where('id_engineer',$req->user()->id)->get()
+		]);
+	}
+
+	public function getJobSupportEach(Request $req){
+		return collect([
+			"job_support" => Job_request_support::with('job')
+				->find($req->id_support)
+		]);
+	}
+
+	public function postJobRequestSupport(Request $req){
+		$history = new Job_history();
+		$history->id_job = $req->id_job;
+		$history->id_user = $req->user()->id;
+		$history->id_activity = 5;
+		$history->date_time = Carbon::now()->toDateTimeString();
+		$history->detail_activity = "Update Day " . 
+			(Carbon::parse(
+				Job_history::where('id_user',$req->user()->id)
+					->where('id_activity',4)
+					->where('id_job',$req->id_job)
+					->first()
+					->date_time
+				)->diffInDays(Carbon::now()
+			) + 1) . " - " . ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Support";
+		$history->save();
+
+		$request_support = new Job_request_support();
+		$request_support->id_job = $req->id_job;
+		$request_support->id_history = $history->id;
+		$request_support->id_engineer = $req->user()->id;
+		$request_support->problem_support = $req->problem_support;
+		$request_support->reason_support = $req->reason_support;
+		$request_support_documentation = $req->file('picture_support');
+		$request_support_documentation->storeAs(
+			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/request_support",
+			$request_support_documentation->getClientOriginalName()
+		);
+		$request_support->picture_support = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/request_support/" . $request_support_documentation->getClientOriginalName();
+		$request_support->status = "Open"; 
+		$request_support->date_add = Carbon::now()->toDateTimeString(); 
+		$request_support->save();
+
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Support",
+			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " ask for help for constraints in the work \n[" . Job::find($req->id_job)->job_name . "]",
 			$history->id,
 			$req->id_job
 		);
