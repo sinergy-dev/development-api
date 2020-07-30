@@ -17,6 +17,9 @@ class Location extends Model
 
 	protected $appends = [
 		'long_location',
+		'long_location_region',
+		'long_location_area',
+		// 'long_location_area',
 		'text'
 	];
 	
@@ -27,6 +30,8 @@ class Location extends Model
 		'date_add',
 		'level',
 		'long_location',
+		'long_location_region',
+		'long_location_area',
 		'text'
 	];
 
@@ -63,5 +68,21 @@ class Location extends Model
 		// 	->join(DB::raw('`location` `location3`'),'location3.sub_location','location2.id')
 		// 	->where('location3.id','=',$this->id)->first()->location;
 		// return "{$this->location_name} {$this->location_name}";
+	}
+
+	public function getLongLocationRegionAttribute(){
+		if($this->long_location == "High Level Location"){
+			return $this->long_location;
+		} else {
+			return trim(explode("-", $this->long_location)[2]);
+		}
+	}
+
+	public function getLongLocationAreaAttribute(){
+		if($this->long_location == "High Level Location"){
+			return $this->long_location;
+		} else {
+			return trim(explode("-", $this->long_location)[1]);
+		}
 	}
 }
