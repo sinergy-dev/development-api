@@ -26,6 +26,7 @@ use App\Customer;
 use App\Location;
 use Carbon\Carbon;
 use App\Job_request_item;
+use App\Job_request_support;
 use App\Candidate_engineer;
 use App\Candidate_engineer_location;
 use App\Candidate_engineer_category;
@@ -247,7 +248,7 @@ class RestController extends Controller
 	public function getJobProgress(Request $req){
 		return collect([
 			'job' => Job::with(['progress','customer','location','level','pic','category'])->find($req->id_job),
-			'progress' => Job_history::with(['user','request_item'])->where('id_job',$req->id_job)->orderBy('date_time','DESC')->get()
+			'progress' => Job_history::with(['user','request_item','request_support'])->where('id_job',$req->id_job)->orderBy('date_time','DESC')->get()
 		]);
 	}
 
@@ -371,7 +372,7 @@ class RestController extends Controller
 		$ktp_name = "ktp_files_". Carbon::now()->timestamp. "." .explode(".", $files_ktp->getClientOriginalName())[1];
 
 		$files_ktp->storeAs(
-			"storage/candidate_data/" . $partner->id  . "_" . $req->name . "/ktp/",
+			"public/candidate_data/" . $partner->id  . "_" . $req->name . "/ktp/",
 			$ktp_name
 		);
 
@@ -456,7 +457,7 @@ class RestController extends Controller
 
 		$partner = Candidate_engineer::where('id',$id_candidate)->first();
 		$partner->latest_education = $req->latest_education;
-		$partner->portofolio_file = $req->files_ktp;
+		// $partner->portofolio_file = $req->portofolio_file;
 		$partner->status = "OK Basic";
 		$partner->update();
 
@@ -487,16 +488,17 @@ class RestController extends Controller
 			$portofolio_name
 		);
 
-		$partner->ktp_files = "public/candidate_data/" . $id_candidate  . "_" . Candidate_engineer::where('id',$id_candidate)->first()->name . "/portofolio/" .
+		$partner->portofolio_file = "storage/candidate_data/" . $id_candidate  . "_" . Candidate_engineer::where('id',$id_candidate)->first()->name . "/portofolio/" .
 			$portofolio_name;
 
 		$partner->save();
 
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
-			$req->email,
-			$req->name . " [Reg - Advance Join]",
-			$req->name . " has been register for, immediately do further checks",
+			Candidate_engineer::find($id_candidate)->email,
+			// Candidate_engineer::find('')$req->email,
+			Candidate_engineer::find($id_candidate)->name . " [Reg - Advance Join]",
+			Candidate_engineer::find($id_candidate)->name . " has been register for, immediately do further checks",
 			"OK Basic",
 			$partner->id
 		);
@@ -643,11 +645,11 @@ class RestController extends Controller
 
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
-			$req->email,
-			$req->name . " [Reg - Verify policy]",
-			$req->name . " has been register for, immediately do further checks",
+			Candidate_engineer::find($req->id_candidate)->email,
+			Candidate_engineer::find($req->id_candidate)->name . " [Reg - Make New Account!]",
+			Candidate_engineer::find($req->id_candidate)->name . " has been register for, immediately do further checks",
 			"OK Agreement",
-			$partner->id
+			Candidate_engineer::find($req->id_candidate)->id
 		);
 
 		return 'success';
@@ -683,6 +685,30 @@ class RestController extends Controller
 			$request_item = Job_request_item::where('id_history',$req->id_history)->first();
 			$request_item->status_item = 'Rejected';
 			$request_item->update();
+		}
+		
+
+		return 'Success';
+	}
+
+	public function postStatusRequestSupport(Request $req){
+		if ($req->status == 'approve') {
+
+			$request_support = Job_request_support::where('id',$req->id_support)->first();
+			$request_support->status = 'Progress';
+			$request_support->update();
+
+		}else if ($req->status == 'done') {
+
+			$request_support = Job_request_support::where('id',$req->id_support)->first();
+			$request_support->status = 'Done';
+			$request_support->update();
+
+		}else{
+
+			$request_support = Job_request_support::where('id',$req->id_support)->first();
+			$request_support->status = 'Reject';
+			$request_support->update();
 		}
 		
 
@@ -1085,9 +1111,9 @@ class RestController extends Controller
 
 		$all_applyer = Users::where('id_type',1)->get();
 
-		foreach ($all_applyer as $all_applyer) {
-			$this->getTokenToNotification($all_applyer->id,'New Job','Hei, There`re new job available!');
-		}
+		// foreach ($all_applyer as $all_applyer) {
+		// 	$this->getTokenToNotification($all_applyer->id,'New Job','Hei, There`re new job available!');
+		// }
 		
 		return "Success";
 	}
