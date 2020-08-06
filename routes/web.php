@@ -136,6 +136,9 @@ Route::post('client/postNewClient','RestController@postNewClient');
 
 Route::get('job/getStatusRequestItem','RestController@getRequestitem');
 Route::post('job/postStatusRequestItem','RestController@postStatusRequestItem');
+Route::post('job/postStatusRequestSupport','RestController@postStatusRequestSupport');
+
+Route::get('job/getJobSupportEach','API\APIRestController@getJobSupportEach');
 
 Route::post('join/postBasicJoin','RestController@postBasicJoin');
 Route::post('join/postAdvancedJoin','RestController@postAdvancedJoin');
