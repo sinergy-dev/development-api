@@ -395,7 +395,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$partner->id)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to("tech@sinergy.co.id")->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] You`ve been Success for filling First Stage'));
+		Mail::to($req->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] You`ve been Success for filling First Stage'));
 
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
@@ -442,7 +442,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to("tech@sinergy.co.id")->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
 
 		return 'success';
 	}
@@ -539,7 +539,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to("tech@sinergy.co.id")->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
 
 		return $partner;
 	}
@@ -570,7 +570,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to("tech@sinergy.co.id")->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Interviews room has been started!'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Interviews room has been started!'));
 
 		return $partner;
 	}
@@ -596,7 +596,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to("tech@sinergy.co.id")->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! Interview Result.'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! Interview Result.'));
 
 
 		return 'success';
@@ -623,7 +623,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to("tech@sinergy.co.id")->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Verifying Data Agreement!'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Verifying Data Agreement!'));
 
 		return 'success';
 	}	
@@ -796,7 +796,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to("tech@sinergy.co.id")->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats, This is your new account!'));
+		Mail::to($req->email_eng)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats, This is your new account!'));
 		
 		return $engineer;
 	}
