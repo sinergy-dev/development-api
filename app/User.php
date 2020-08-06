@@ -12,7 +12,7 @@ class User extends Authenticatable
 
     protected $connection= 'mysql_dispatcher';
 
-	protected $table = 'user';
+	protected $table = 'users';
 	
 	protected $primaryKey = 'id';
 	
