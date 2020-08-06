@@ -33,4 +33,8 @@ class Job_history extends Model
 	public function request_item(){
 		return $this->hasOne('App\Job_request_item','id_history','id');
 	}
+
+	public function request_support(){
+		return $this->hasOne('App\Job_request_support','id_history','id');
+	}
 }
