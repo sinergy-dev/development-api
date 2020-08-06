@@ -280,6 +280,13 @@ class APIRestController extends Controller
 		]);
 	}
 
+	public function getJobSupportEachDetail(Request $req){
+		return collect([
+			"job_support" => Job_request_support::with('job')
+				->find($req->id_support)
+		]);
+	}
+
 	public function postJobRequestSupport(Request $req){
 		$history = new Job_history();
 		$history->id_job = $req->id_job;
