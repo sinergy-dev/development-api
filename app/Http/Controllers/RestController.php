@@ -467,11 +467,15 @@ class RestController extends Controller
 		$partner_location->date_add 	= Carbon::now()->toDateTimeString();
 		$partner_location->save();
 
-		$partner_category = new Candidate_engineer_category();
-		$partner_category->id_candidate = $id_candidate;
-		$partner_category->id_category 	= $req->id_category;
-		$partner_category->date_add 	= Carbon::now()->toDateTimeString();
-		$partner_category->save();
+		$cat = explode(",",$req->id_category);
+
+		foreach ($cat as $data) {
+			$partner_category = new Candidate_engineer_category();
+			$partner_category->id_candidate = $id_candidate;
+			$partner_category->id_category 	= $data;
+			$partner_category->date_add 	= Carbon::now()->toDateTimeString();
+			$partner_category->save();
+		}
 
 		$history = new Candidate_engineer_history();
 		$history->id_candidate 		= $id_candidate;
