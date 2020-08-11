@@ -518,12 +518,16 @@ class RestController extends Controller
 		// $update = Candidate_engineer::where('id',$req->id_candidate)->first();
 		// $update->status 	= $req->status;
 		// $update->update();
+		$link = json_decode($this->WebexPostApi($req->interview_date, Carbon::parse($req->interview_date)->addHour()->toDateTimeString()),true);
+
+		$webLink = $link["webLink"];
 
 		$submit = new Candidate_engineer_interview();
 		$submit->id_candidate 		= $req->id_candidate;
 		$submit->interview_date 	= $req->interview_date;
-		$submit->interview_media 	= $req->interview_media;
-		$submit->interview_link 	= $req->interview_link;
+		$submit->interview_media 	= 'webex';
+		// $submit->interview_link 	= $req->interview_link;
+		$submit->interview_link 	= $webLink;
 		$submit->status 			= $req->status_interview;
 		$submit->save();
 
@@ -543,9 +547,32 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! Published Interview Schedule.'));
 
 		return $partner;
+	}
+
+	public function WebexPostApi($start_date,$end_date){
+		$client = new Client();
+	    $url = "https://webexapis.com/v1/meetings";
+
+	    $response =  $client->request('POST', $url, [
+			'headers' => [
+				'Content-Type'     => 'application/json',
+				'Authorization'      => 'Bearer NDE3ZThiOWUtYTY3MC00ZjMyLTkzODYtM2MyYjRiYTlmNzUxNzAzMDBlOTUtZGRm_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
+			],'json' => [
+				  "title" => "Partner Interview Schedule",
+				  "agenda" => "Partner Interview Schedule Agenda",
+				  "password" => "3101",
+				  "start" => $start_date,
+				  "end" => $end_date,
+				  "enabledAutoRecordMeeting" => true,
+				  "allowAnyUserToBeCoHost" => true
+				
+			]
+		]);
+
+		return $response->getBody();
 	}
 
 	//email ke partner
@@ -635,8 +662,9 @@ class RestController extends Controller
 	public function postPartnerAgreement(Request $req){
 		$update_interview = Candidate_engineer::where('id',$req->id_candidate)->first();
 		$update_interview->status = $req->status;
-		$update_interview->candidate_account_name = $req->account_name;
+		$update_interview->candidate_account_name 	= $req->account_name;
 		$update_interview->candidate_account_number = $req->account_number;
+		$update_interview->candidate_account_alias 	= $req->account_alias;
 		$update_interview->update();
 
 		$history = new Candidate_engineer_history();
@@ -767,9 +795,10 @@ class RestController extends Controller
 		$engineer_loc->save();
 
 		$payment_acc = new Payment_account();
-		$payment_acc->id_user = $engineer->id;
-		$payment_acc->account_name = $req->account_name;
-		$payment_acc->account_number = $req->account_number;
+		$payment_acc->id_user 			= $engineer->id;
+		$payment_acc->account_name 		= $req->account_name;
+		$payment_acc->account_number 	= $req->account_number;
+		$payment_acc->account_alias 	= $req->account_alias;
 		$payment_acc->save();
 
 		$Engineer_level = new Engineer_level();

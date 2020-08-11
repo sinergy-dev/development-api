@@ -31,6 +31,7 @@ class Candidate_engineer extends Model
 		'portofolio_file',
 		'identifier',
 		'candidate_account_name',
+		'candidate_account_alias',
 		'candidate_account_number',
 		'status',
 	];
