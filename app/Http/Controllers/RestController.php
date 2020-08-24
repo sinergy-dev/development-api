@@ -46,6 +46,7 @@ use Kreait\Firebase\Database;
 use Google\Auth\CredentialsLoader;
 use GuzzleHttp\Client;
 use Storage;
+use File;
 
 use Aws\S3\S3Client;
 use Image;
@@ -74,6 +75,8 @@ class RestController extends Controller
 		$count_done = DB::connection('mysql_dispatcher')->table('job')
 					->where('job_status','Done')->count();
 
+		// return $count_open . "," . $count_ready . ","  . $count_progress . "," . $count_done;
+
 		if ($count_open == 0) {
 			return collect([
 				'open' => $count_open,
@@ -83,13 +86,30 @@ class RestController extends Controller
 				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_open,
 			]);
 		
-		}else if ($count_ready == 0) {
+		}else if ($count_ready == 0 ) {
 			return collect([
 				'open' => $count[1]->count,
 				'ready' => $count_ready,
 				'progress' => $count[2]->count,
 				'done' => $count[0]->count,
 				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_ready,
+			]);
+		}else if ($count_ready == 0 && $count_progress == 0 && $count_done == 0) {
+			return collect([
+				'open' => $count[0]->count,
+				'ready' => $count_ready,
+				'progress' => $count_progress,
+				'done' => $count_done,
+				'total' => $count[0]->count + $count_progress + $count_ready + $count_ready,
+			]);
+		
+		}else if ($count_progress == 0 && $count_done == 0) {
+			return collect([
+				'open' => $count[0]->count,
+				'ready' => $count[1]->count,
+				'progress' => $count_progress,
+				'done' => $count_done,
+				'total' => $count[0]->count + $count[1]->count + $count_ready + $count_ready,
 			]);
 		
 		}else if ($count_progress == 0) {
@@ -123,8 +143,18 @@ class RestController extends Controller
 		return collect(['job_category' => Job_category::all()]);
 	}
 
+	public function getJobCategoryPaging(Request $req){
+		return Job_category::paginate($req->per_page);
+	}
+
 	public function getJobCategoryAll(){
 		return collect(['job_category_all' => Job_category_main::with('category')->get()]);
+	}
+
+	public function getJobCategoryMain(Request $req){
+		$MainCategory = collect(Job_category_main::select(DB::raw('`id`,`category_main_name` AS `text`'))->orderBy('category_main_name','asc')->get());
+
+		return array("results" => $MainCategory);
 	}
 
 	public function getJobList(){
@@ -305,6 +335,20 @@ class RestController extends Controller
 		return $query->paginate($req->per_page)->appends($req->only('search'));
 	}
 
+	public function getJobCategorySearch(Request $req){
+		$query = Job_category::orderBy('id','DESC')->select("*");
+		$searchFields = ['category_name','category_description'];
+		$query->where(function($query) use($req, $searchFields){
+
+			$searchWildcard = '%' . $req->search . '%';
+			foreach($searchFields as $field){
+				$query->orWhere($field, 'LIKE', $searchWildcard);
+			}
+		});
+
+		return $query->paginate($req->per_page)->appends($req->only('search'));
+	}
+
 	public function getRequestitem(Request $req){
 		return Job_request_item::with(['user'])->where('id_history', $req->id_history)->get();
 	}
@@ -345,6 +389,78 @@ class RestController extends Controller
 			'partner_progress' => Candidate_engineer_history::with(['engineer'])->where('id_candidate',$req->id_candidate)->orderBy('history_date','DESC')->get()
 		]);
 	}
+
+	public function postCategory(Request $req){
+		$cat_image = $req->file('cat_image');
+
+		$category = new Job_category();
+		$category->id_category_main 	= $req->id_category_main;
+		$category->category_name 		= $req->category_name;
+		$category->category_description	= $req->category_description;
+		$category->category_image 		= "";
+		$category->date_add				= Carbon::now()->toDateTimeString();
+		$category->save();
+
+		$name_format = str_replace(' ', '_', $req->category_name);
+
+		$image_format = $name_format . "."  . explode(".", $cat_image->getClientOriginalName())[1];
+
+		$cat_image->storeAs(
+			"public/android/image/category_image/" , $image_format
+		);
+
+		$category->category_image = "storage/android/image/category_image/" . $image_format;
+		$category->save();
+
+		return $category;
+	}
+
+	public function postCategoryMain(Request $req){
+		$category_main = new Job_category_main();
+		$category_main->category_main_name = $req->category_main_name;
+		$category_main->date_add = Carbon::now()->toDateTimeString();
+		$category_main->save();
+
+		return $category_main;
+	}
+
+	public function postUpdateCategory(Request $req){
+		$cat_image = $req->file('cat_image');
+
+		if ($cat_image != NULL) {
+			$name_format = str_replace(' ', '_', $req->category_name);
+
+			$image_format = $name_format . "."  . explode(".", $cat_image->getClientOriginalName())[1];
+
+			$image_path = 'public/android/image/category_image/'.explode("/", Job_category::where('id',$req->id)->first()->category_image)[4];  // Value is not URL but directory file path
+
+			if(Storage::exists($image_path)) {
+				Storage::delete($image_path);
+
+			    $cat_image->storeAs(
+					"public/android/image/category_image/" , $image_format
+				);
+			}
+
+			$category = Job_category::where('id',$req->id)->first();
+			$category->id_category_main 	= $req->id_category_main;
+			$category->category_name 		= $req->category_name;
+			$category->category_description	= $req->category_description;
+			$category->category_image 		= "storage/android/image/category_image/" . $image_format;
+			$category->update();
+		}else{
+			$category = Job_category::where('id',$req->id)->first();
+			$category->id_category_main 	= $req->id_category_main;
+			$category->category_name 		= $req->category_name;
+			$category->category_description	= $req->category_description;
+			$category->update();
+		}
+
+		return $category;
+	
+	}
+
+
 	//notif ke moderator
 
 	public function postBasicJoin(Request $req){
@@ -559,7 +675,7 @@ class RestController extends Controller
 	    $response =  $client->request('POST', $url, [
 			'headers' => [
 				'Content-Type'     => 'application/json',
-				'Authorization'      => 'Bearer NDE3ZThiOWUtYTY3MC00ZjMyLTkzODYtM2MyYjRiYTlmNzUxNzAzMDBlOTUtZGRm_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
+				'Authorization'      => 'Bearer NWFmMjBlODEtMzU5Yy00NzBlLWExYWQtZDg4ZjRhN2JmY2Q3MTE2ZmFlNGUtMzMz_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
 			],'json' => [
 				  "title" => "Partner Interview Schedule",
 				  "agenda" => "Partner Interview Schedule Agenda",
@@ -709,7 +825,7 @@ class RestController extends Controller
 		if ($req->status == 'approve') {
 
 			$request_item = Job_request_item::where('id_history',$req->id_history)->first();
-			$request_item->status_item = 'Accepted';
+			$request_item->status_item = 'Done';
 			$request_item->update();
 
 		}else{

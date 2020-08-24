@@ -14,6 +14,8 @@
 use Intervention\Image\Facades\Image;
 use Illuminate\Http\Request;
 
+Route::get('testing','TestController@postGuzzleRequest');
+
 Route::get('testPDFReport','RestController@testPDFReport');
 Route::get('testGetImage',function(){
 	return response()->file(Storage::disk('ftp')->get('aaa.png'));
@@ -79,7 +81,10 @@ Route::get('dashboard/getDashboardModerator','RestController@getDashboardModerat
 Route::get('dashboard/getTopEngineer','RestController@getTopEngineer');
 // Route::post('dashboard/getDashboard','RestController@getDashboard');
 Route::get('dashboard/getJobCategory','RestController@getJobCategory');
+Route::get('dashboard/getJobCategoryPaging','RestController@getJobCategoryPaging');
 Route::get('dashboard/getJobCategoryAll','RestController@getJobCategoryAll');
+Route::get('dashboard/getJobCategoryMain','RestController@getJobCategoryMain');
+Route::get('dashboard/getJobCategory/search','RestController@getJobCategorySearch');
 
 Route::get('dashboard/getJobList','RestController@getJobList');
 Route::get('dashboard/getJobListSumary','RestController@getJobListSumary');
@@ -112,6 +117,11 @@ Route::post('job/postPayedByModeratorFirst','RestController@postPayedByModerator
 Route::post('job/postPayedByModeratorSecond','RestController@postPayedByModeratorSecond');
 Route::post('job/postPayedByModeratorInvoice','RestController@postPayedByModeratorInvoice');
 Route::post('job/postUpdatePayment','RestController@postUpdatePayment');
+
+
+Route::post('category/postCategory','RestController@postCategory');
+Route::post('category/postCategoryMain','RestController@postCategoryMain');
+Route::post('category/postUpdateCategory','RestController@postUpdateCategory');
 
 // Web API
 Route::get('job/createJob/getParameterClientAll','RestController@getParameterClientAll');

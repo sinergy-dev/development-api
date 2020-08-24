@@ -44,7 +44,11 @@ class VerifyCsrfToken extends Middleware
         'join/postAgreementInterview',
         'join/postPartnerAgreement',
         'partner/getNewPartnerIdentifier',
-        'job/postStatusRequestSupport'
+        'job/postStatusRequestSupport',
+        'testing',
+        'category/postCategory',
+        'category/postUpdateCategory',
+        'category/postCategoryMain'
         
      
 

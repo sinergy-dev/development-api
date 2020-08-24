@@ -18,6 +18,7 @@ class Payment_account extends Model
 	protected $fillable = [
 		'id_user',
 		'account_name',
+		'account_alias',
 		'account_number'
 	];
 

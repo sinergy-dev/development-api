@@ -269,14 +269,19 @@ class APIRestController extends Controller
 
 	public function getJobSupport(Request $req){
 		return collect([
-			"job_support" => Job_request_support::with('job')->where('id_engineer',$req->user()->id)->get()
+			"job_support" => Job_request_support::with('job')->where('id_engineer',$req->user()->id)->orderBy('id','DESC')->get()
 		]);
 	}
 
 	public function getJobSupportEach(Request $req){
+		// return array_values($this->getRealTimeDatabaseSnapshot('job_support/' . $req->id_support)->getValue()['chat']);
+		// return array_keys($this->getRealTimeDatabaseSnapshot('job_support/' . $req->id_support)->getValue()['chat']);
 		return collect([
 			"job_support" => Job_request_support::with('job')
-				->find($req->id_support)
+				->find($req->id_support),
+			// "job_support_chat" => $this->getRealTimeDatabaseSnapshot('job_support/' . $req->id_support)->getValue()['chat']
+			"job_support_chat" => array_values($this->getRealTimeDatabaseSnapshot('job_support/' . $req->id_support)->getValue()['chat'])
+			// "job_support_chat" => array_values($this->getRealTimeDatabaseSnapshot('job_support/1')->getValue()['chat'])
 		]);
 	}
 
@@ -319,6 +324,33 @@ class APIRestController extends Controller
 		$request_support->status = "Open"; 
 		$request_support->date_add = Carbon::now()->toDateTimeString(); 
 		$request_support->save();
+
+		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-dev-key.json');
+		$firebase = (new Factory)
+			->withServiceAccount($serviceAccount)
+			->withDatabaseUri(env('FIREBASE_DATABASEURL'))
+			->create();
+
+		$refrence = 'job_support/' . $request_support->id . '/';
+
+		$database = $firebase->getDatabase();
+
+		$instanceDatabase = $database->getReference($refrence);
+
+		$updateDatabase = $database
+			->getReference($refrence)
+			// ->getReference($refrence . 0)
+			->set([
+				"id_job" => $request_support->id_job,
+				"id_engineer" => $request_support->id_engineer
+			]);
+
+		$database->getReference('job_support/' . $request_support->id . '/chat/')
+			->push([
+				"from" => "engineer",
+				"message" => "Hi",
+				"time" => Carbon::now()->timestamp
+			]);
 
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
@@ -615,6 +647,22 @@ class APIRestController extends Controller
 
 	public function getJobReportPDF(Request $req){
 		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles('public/data/56_Backend_20_documentation/job_report/')[0]));
+	}
+
+	public function getRealTimeDatabaseSnapshot($refrence){
+		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-dev-key.json');
+		$firebase = (new Factory)
+			->withServiceAccount($serviceAccount)
+			->withDatabaseUri(env('FIREBASE_DATABASEURL'))
+			->create();
+
+		// $refrence = 'job_support/4/';
+
+		$database = $firebase->getDatabase();
+
+		$instanceDatabase = $database->getReference($refrence);
+
+		return $instanceDatabase->orderByKey()->getSnapshot();
 	}
 
 }

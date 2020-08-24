@@ -19,7 +19,8 @@ class Job_category extends Model
 	protected $appends = [
 		'category_image_url',
 		'text',
-		'text_category'
+		'text_category',
+		'category_main_name'
 	];
 
 	protected $visible = [
@@ -30,7 +31,8 @@ class Job_category extends Model
 		'category_image',
 		'category_image_url',
 		'text',
-		'text_category'
+		'text_category',
+		'category_main_name'
 	];
 	
 	protected $fillable = [
@@ -67,6 +69,15 @@ class Job_category extends Model
 			->where('job_category.id',$this->id)
 			->first()
 			->category_name;
+	}
+
+	public function getCategoryMainNameAttribute() {
+		return DB::connection('mysql_dispatcher')
+			->table('job_category')
+			->join('job_category_main','job_category_main.id','=','job_category.id_category_main')
+			->where('job_category.id',$this->id)
+			->first()
+			->category_main_name;
 	}
 
 	public function category_main(){
