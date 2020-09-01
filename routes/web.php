@@ -119,9 +119,9 @@ Route::post('job/postPayedByModeratorInvoice','RestController@postPayedByModerat
 Route::post('job/postUpdatePayment','RestController@postUpdatePayment');
 
 
-Route::post('category/postCategory','RestController@postCategory');
-Route::post('category/postCategoryMain','RestController@postCategoryMain');
-Route::post('category/postUpdateCategory','RestController@postUpdateCategory');
+Route::post('setting/category/postCategory','RestController@postCategory');
+Route::post('setting/category/postCategoryMain','RestController@postCategoryMain');
+Route::post('setting/category/postUpdateCategory','RestController@postUpdateCategory');
 
 // Web API
 Route::get('job/createJob/getParameterClientAll','RestController@getParameterClientAll');
