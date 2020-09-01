@@ -129,12 +129,16 @@ class APIRestController extends Controller
 
 	public function getJobByCategory(Request $req){
 
+		$jobList = Job::with(['category','customer','location'])
+				->whereIn('id', Job_applyer::where('id_engineer',$req->user()->id)->pluck('id_job'));
+
+		if(isset($req->job_status)){
+			$jobList->where('job_status',$req->job_status);
+		}				
 
 		// return collect(['job' => Job::with(['category','customer','location'])->get()]);
 		return collect([
-			'job' => Job::with(['category','customer','location'])
-				->whereIn('id', Job_applyer::where('id_engineer',$req->user()->id)->pluck('id_job'))
-				->get(),
+			'job' => $jobList->get(),
 			'id_engineer' => $req->user()->id]);
 	}
 
