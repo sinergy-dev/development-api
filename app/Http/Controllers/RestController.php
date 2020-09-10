@@ -1119,7 +1119,7 @@ class RestController extends Controller
 		$payment->id_payment_account = Payment_account::where('id_user',Job::find($req->id_job)->working_engineer->id_engineer)->first()->id;
 		$payment->payment_to = Job::find($req->id_job)->working_engineer->id_engineer;
 		$payment->payment_from = $req->id_moderator;
-		$payment->payment_nominal = $req->nominal;
+		$payment->payment_nominal = str_replace(",", "", $req->nominal);
 		$payment->payment_method = "";
 		$payment->payment_invoice = "";
 		$payment->date_add = Carbon::now()->toDateTimeString();
