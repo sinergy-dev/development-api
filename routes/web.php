@@ -101,6 +101,8 @@ Route::get('job/getJopApplyer','RestController@getJopApplyer');
 
 Route::get('job/getJobProgress','RestController@getJobProgress');
 Route::get('job/getJobForLoAPDF','RestController@getJobForLoAPDF');
+Route::get('job/getJobReportPDF','API\APIRestController@getJobReportPDF');
+
 
 Route::get('payment/getJobPayment','RestController@getJobPayment');
 Route::get('payment/getJobPaymentDetail','RestController@getJobPaymentDetail');
