@@ -109,6 +109,7 @@ class APIRestController extends Controller
 	// berserta array progress di dalamnya
 
 	public function getJobProgress(Request $req){
+		// sleep(10);
 		return collect([
 			'job' => Job::with(['progress','customer','location','level','pic','category'])->find($req->id_job),
 			'progress' => Job_history::with('user')->where('id_job',$req->id_job)->orderBy('date_time','DESC')->get()
@@ -161,8 +162,8 @@ class APIRestController extends Controller
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Apply job",
-			Job::find($req->id_job)->job_name . " has been applied for, immediately do further checks",
+			"[Apply] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
+			Job::find($req->id_job)->job_name . " has been applied for " . $req->user()->name . ", immediately do further checks",
 			$history->id,
 			$req->id_job
 		);
@@ -186,7 +187,7 @@ class APIRestController extends Controller
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job started",
+			"[Start] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
 			"Has started the '" . Job::find($req->id_job)->job_name .  "' job, immediately monitoring his activities",
 			$history->id,
 			$req->id_job
@@ -215,13 +216,21 @@ class APIRestController extends Controller
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job Update",
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " has updated this job \n[" . Job::find($req->id_job)->job_name . "] " . $req->detail_activity,
+			"[Update] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
+			$req->user()->name . " has updated this job \n[" . Job::find($req->id_job)->job_name . "] " . $req->detail_activity,
 			$history->id,
 			$req->id_job
 		);
 
-		return $history;
+		// return $history;
+		return collect([
+			"id" => (int) $history->id,
+			"id_job" => (int) $history->id_job,
+			"id_user" => (int) $history->id_user,
+			"id_activity" => (string) $history->id_activity,
+			"date_time" => (string) $history->date_time,
+			"detail_activity" => (string) $history->detail_activity
+		]);
 	}
 
 	public function postJobRequestItem(Request $req){
@@ -262,8 +271,8 @@ class APIRestController extends Controller
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Item",
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " make requests for goods to continue work \n[" . Job::find($req->id_job)->job_name . "]",
+			"[Request Item] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
+			$req->user()->name . " make requests for goods/items to continue work \n[" . Job::find($req->id_job)->job_name . "]",
 			$history->id,
 			$req->id_job
 		);
@@ -359,8 +368,8 @@ class APIRestController extends Controller
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Support",
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " ask for help for constraints in the work \n[" . Job::find($req->id_job)->job_name . "]",
+			"[Request Support] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
+			$req->user()->name . " ask for help for constraints in the work \n[" . Job::find($req->id_job)->job_name . "]",
 			$history->id,
 			$req->id_job
 		);
@@ -439,8 +448,8 @@ class APIRestController extends Controller
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
 			Users::find($req->user()->id)->email,
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Job Finish",
-			ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " has finished this job and ready to review.\n[" . Job::find($req->id_job)->job_name . "]",
+			"[Finish] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
+			$req->user()->name . " has finished this job and ready to review.\n[" . Job::find($req->id_job)->job_name . "]",
 			$history->id,
 			$req->id_job
 		);
@@ -650,7 +659,7 @@ class APIRestController extends Controller
 	}
 
 	public function getJobReportPDF(Request $req){
-		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles('public/data/56_Backend_20_documentation/job_report/')[0]));
+		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles("public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_report/")[0]));
 	}
 
 	public function getRealTimeDatabaseSnapshot($refrence){
