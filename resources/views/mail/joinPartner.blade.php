@@ -49,8 +49,11 @@
 						<tr>
 							<th>Time</th><td>{{date('g:i a',strtotime($partner->interview->interview_date))}}</td>
 						</tr>
-						<tr>
+						<!-- <tr>
 							<th>Link</th><td><a href="{{$partner->interview->interview_link}}" target="_blank">{{$partner->interview->interview_link}}</a></td>
+						</tr> -->
+						<tr>
+							<th>Link</th><td> to get this link visit <a href="{{url('https://172.16.1.200:8080/partner/'.$randomString.'')}}">https://EOD.co.id/</a> </td>
 						</tr>
 					</table>
 					@else
@@ -63,7 +66,7 @@
 			@endif
 		@elseif($partner->status == "OK Interview")
 		<strong>Verifying and Adding Personal Information Data!</strong>
-		<p>Please go to website  <a href="{{url('https://172.16.1.200:8080/partner')}}">https://EOD.co.id</a>. and <b style="color: red">accept</b> your policy!</p>
+		<p>Please go to website  <a href="{{url('https://172.16.1.200:8080/partner/'.$randomString.'')}}">https://EOD.co.id/</a>. and <b style="color: red">accept</b> your policy!</p>
 		@elseif($partner->status == "OK Partner")
 		<strong>You're now a partner of the company.</strong>
 		<p>You can pick the job based on your job category and get paid. But you can only pick the job from Sinergy Freelance App. So please download our mobile app in the play store or app store. And the following bellow is our username and password for your Sinergy Freelance App. Thank you and good luck!</p>
@@ -111,13 +114,14 @@
 		<tr>
 			<th colspan="2" style="text-align: left;">
 				<span style="color: red">Identifier Code : {{$randomString}}</span>
+
 			</th>
 		</tr>
 	</table>
 	<br>
-	<p>Follow up to your registration progress!, Please visit to <a href="{{url('https://172.16.1.200:8080/partner')}}">https://EOD.co.id</a>. And enter your uniq code identifier above. And <b style="color: red">Don't Forget to Remember your Identifier Code!</b>
+	<p>Follow up to your registration progress!, Please visit to <a href="{{url('https://172.16.1.200:8080/partner/'.$randomString.'')}}">https://EOD.co.id</a>.
 	</p>
-	<p>
+<!-- 	<p>
 		How to get your progress information?
 		<br>
 		1. Open link <a href="{{url('https://172.16.1.200:8080/partner')}}">https://EOD.co.id</a> or copy then paste that link on browser url.<br>
@@ -127,7 +131,7 @@
 		5. Then you'll know your lastest activity of registration stage.<br>
 		6. Thank you.
 
-	</p>
+	</p> -->
 	<p>
 		Disclaimer,
 		if you`ve trouble while next regristation, please contact us at (Ext: 384) or email development@sinergy.co.id. 
