@@ -237,11 +237,19 @@ class RestController extends Controller
 
 	public function getJobForLoAPDF(Request $req){
 		$job = Job::with(['customer','pic','category','location','level'])->find($req->id_job);
-		return collect([
-			'job' => $job,
-			'engineer' => Users::find($job->working_engineer->id_engineer),
-			'last_job_letter' => Job_letter::orderBy('id','DESC')->first()->id
-		]);
+		if(Job_letter::orderBy('id','DESC')->count() == 0){
+			return collect([
+				'job' => $job,
+				'engineer' => Users::find($job->working_engineer->id_engineer),
+				'last_job_letter' => 0
+			]);
+		} else {
+			return collect([
+				'job' => $job,
+				'engineer' => Users::find($job->working_engineer->id_engineer),
+				'last_job_letter' => Job_letter::orderBy('id','DESC')->first()->id
+			]);
+		}
 	}
 
 	// Untuk di activity Job Detail dan Job Progress
