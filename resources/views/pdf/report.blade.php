@@ -13,7 +13,7 @@
 </head>
 <body>
 	<h1 style="text-align: center;">Report Finish Job</h1>
-	<h3 style="text-align: center;">By Rama Agastya</h3>
+	<h3 style="text-align: center;">By {{$data['engineer']}}</h3>
 
 	<p>After the work has been carried out, the engineer must prepare a report document as proof of the work done. The following report documents have been compiled</p>
 	<hr>
