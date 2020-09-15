@@ -61,7 +61,16 @@ class RestController extends Controller
 	}
 
 	public function getDashboardModerator(){
-		$count = DB::connection('mysql_dispatcher')->table('job')->select('job_status',DB::raw('COUNT(*) AS `count`'))->groupBy('job_status')->orderBy('job_status','ASC')->get();
+		// return "jahahahahs";
+		// return Job::where('job_status','Done')->count();
+		$count = DB::connection('mysql_dispatcher')
+			->table('job')
+			->select('job_status',DB::raw('COUNT(*) AS `count`'))
+			->groupBy('job_status')
+			->orderBy('job_status','ASC')
+			->get();
+
+		// return $count;
 
 		$count_open = DB::connection('mysql_dispatcher')->table('job')
 					->where('job_status','Open')->count();
@@ -78,6 +87,7 @@ class RestController extends Controller
 		// return $count_open . "," . $count_ready . ","  . $count_progress . "," . $count_done;
 
 		if ($count_open == 0) {
+			// return "hahahaha";
 			return collect([
 				'open' => $count_open,
 				'ready' => $count[1]->count,
@@ -87,6 +97,7 @@ class RestController extends Controller
 			]);
 		
 		}else if ($count_ready == 0 ) {
+
 			return collect([
 				'open' => $count[1]->count,
 				'ready' => $count_ready,
@@ -130,7 +141,17 @@ class RestController extends Controller
 				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_done,
 			]);
 		
+		} else {
+			return collect([
+				'open' => $count[1]->count,
+				'ready' => $count[3]->count,
+				'progress' => $count[2]->count,
+				'done' => $count[0]->count,
+				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count[3]->count,
+			]);
+			// return "hahahaha";
 		}
+
 	}
 
 	public function getTopEngineer(){
