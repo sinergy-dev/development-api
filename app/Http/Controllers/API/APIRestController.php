@@ -679,4 +679,13 @@ class APIRestController extends Controller
 		return $instanceDatabase->orderByKey()->getSnapshot();
 	}
 
+	public function postProfileUpdate(Request $req){
+		$user_update = Users::find($req->user()->id);
+		$user_update->fill($req->all());
+		if($user_update->save()){
+			return collect(['status' => 'Success']);
+		} else {
+			return collect(['status' => 'Error']);
+		}
+	}
 }
