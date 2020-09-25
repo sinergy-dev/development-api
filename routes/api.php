@@ -51,6 +51,7 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::get('payment/getJobPaymentDetail','API\APIRestController@getJobPaymentDetail');
 
 	Route::get('users/getProfileDetail','API\APIRestController@getProfileDetail');
+	Route::post('users/postProfileUpdate','API\APIRestController@postProfileUpdate');
 	
 
 	// Route::get('job/getJobByCategory','API\APIRestController@getJobByCategory');
