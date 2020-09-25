@@ -187,7 +187,15 @@ class RestController extends Controller
 	}
 
 	public function getJobListAndSumary(Request $req){
-		return collect(['job' => Job::with(['customer','location','category'])->get()]);
+		$jobList = Job::with(['category','customer','location']);
+
+		if(isset($req->job_status)){
+			$jobList->where('job_status',$req->job_status);
+		}
+
+		return collect([
+			'job' => $jobList->get()
+		]);
 	}
 
 	public function getJobListAndSumaryPaginate(Request $req){
