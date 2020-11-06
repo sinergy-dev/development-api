@@ -33,7 +33,7 @@ class VerifyCsrfToken extends Middleware
         'engineer/postNewEngineer',
         'engineer/updateEngineerData',
         'client/postNewClient',
-        'dashboard/getJobListAndSumary/search',
+        // 'dashboard/getJobListAndSumary/search',
         'dashboard/getJobListAndSumary/FilterStatus',
         'join/postBasicJoin',
         'join/postAdvancedJoin',
