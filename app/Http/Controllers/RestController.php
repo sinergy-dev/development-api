@@ -200,35 +200,71 @@ class RestController extends Controller
 
 	public function getJobListAndSumaryPaginate(Request $req){
 		// return Job::with(['customer','location','category'])->orderBy('id_job','DESC')->paginate($req->per_page);
-		return Job::with(['customer','location','category'])
-		->orderByRaw('FIELD(job_status,
-        "Open",
-        "Ready",
-        "Progress",
-        "Done")')
-        ->paginate($req->per_page);
-		
+		if($req->type == "card"){
+			return Job::with(['customer','location','category'])
+				->orderByRaw('FIELD(job_status,
+		        "Open",
+		        "Ready",
+		        "Progress",
+		        "Done")')
+		        ->paginate($req->per_page);
+		} else if ($req->type == "list") {
+			return Job::with(['customer','location','category'])
+				->join(DB::raw('(SELECT `id_job` ,MAX(`date_time`) as `latest_date` FROM `dispatcherapp`.`job_history` GROUP BY `id_job` ORDER BY `latest_date` DESC) AS `latest`'),'latest.id_job','=','job.id')
+				->orderBy('latest_date','DESC')
+				->paginate($req->per_page);
+		}
+
 	}
 
 	public function getJobListAndSumarySearch(Request $req){
-		$query = Job::with(['customer','location','category'])->orderBy('id','DESC')->select("*");
-		$searchFields = ['job_name','job_status','job_description','job_requrment'];
-		$query->where(function($query) use($req, $searchFields){
-			$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
-			if(!empty($customer_id)){
-				$query->orWhereRaw('`id_customer` IN (' . implode(",",$customer_id) . ")");
-			}
+		if($req->type == "card"){
+			$query = Job::with(['customer','location','category'])
+				->orderByRaw('FIELD(job_status,
+		        "Open",
+		        "Ready",
+		        "Progress",
+		        "Done")')->select("*");
+			$searchFields = ['job_name','job_status','job_description','job_requrment'];
+			$query->where(function($query) use($req, $searchFields){
+				$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+				if(!empty($customer_id)){
+					$query->orWhereRaw('`id_customer` IN (' . implode(",",$customer_id) . ")");
+				}
 
-			$customer_id = Job_category::where('category_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
-			if(!empty($customer_id)){
-				$query->orWhereRaw('`id_category` IN (' . implode(",",$customer_id) . ")");
-			}
+				$customer_id = Job_category::where('category_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+				if(!empty($customer_id)){
+					$query->orWhereRaw('`id_category` IN (' . implode(",",$customer_id) . ")");
+				}
 
-			$searchWildcard = '%' . $req->search . '%';
-			foreach($searchFields as $field){
-				$query->orWhere($field, 'LIKE', $searchWildcard);
-			}
-		});
+				$searchWildcard = '%' . $req->search . '%';
+				foreach($searchFields as $field){
+					$query->orWhere($field, 'LIKE', $searchWildcard);
+				}
+			});
+		}else{
+			$query = Job::with(['customer','location','category'])
+			->join(DB::raw('(SELECT `id_job` ,MAX(`date_time`) as `latest_date` FROM `dispatcherapp`.`job_history` GROUP BY `id_job` ORDER BY `latest_date` DESC) AS `latest`'),'latest.id_job','=','job.id')
+			->orderBy('latest_date','DESC')->select("*");
+			$searchFields = ['job_name','job_status','job_description','job_requrment','latest_date'];
+			$query->where(function($query) use($req, $searchFields){
+				$customer_id = Customer::where('customer_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+				if(!empty($customer_id)){
+					$query->orWhereRaw('`id_customer` IN (' . implode(",",$customer_id) . ")");
+				}
+
+				$customer_id = Job_category::where('category_name', 'LIKE', '%' . $req->search . '%')->pluck('id')->all();
+				if(!empty($customer_id)){
+					$query->orWhereRaw('`id_category` IN (' . implode(",",$customer_id) . ")");
+				}
+
+				$searchWildcard = '%' . $req->search . '%';
+				foreach($searchFields as $field){
+					$query->orWhere($field, 'LIKE', $searchWildcard);
+				}
+			});
+		}
+		
 		return $query->paginate($req->per_page)->appends($req->only('search'));
 	}
 
@@ -1095,7 +1131,7 @@ class RestController extends Controller
 			$applyer_reject->save();
 		}
 
-		$this->getTokenToNotification($req->id_engineer,'Job Approvement','Congrats!! '.$user->name.', you got a new job ('.$jobs->job_name.')');
+		// $this->getTokenToNotification($req->id_engineer,'Job Approvement','Congrats!! '.$user->name.', you got a new job ('.$jobs->job_name.')');
 
 		return $history;
 	}
