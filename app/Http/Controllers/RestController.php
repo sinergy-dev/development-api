@@ -427,7 +427,7 @@ class RestController extends Controller
 	}
 
 	public function getNewPartnerList(Request $req){
-		return Candidate_engineer::paginate($req->per_page);
+		return Candidate_engineer::orderBy('id','desc')->paginate($req->per_page);
 	}
 
 	public function getPartnerListSearch(Request $req){
@@ -553,6 +553,7 @@ class RestController extends Controller
 		$partner->phone = $req->phone;
 		$partner->address = $req->address;
 		$partner->ktp_nik = $req->ktp_nik;
+		$partner->date_of_birth = $req->date_of_birth;
 		$partner->identifier = $randomString;
 		$partner->ktp_files = "public/data/image.jpg";
 		$partner->status = "On Progress";
@@ -623,7 +624,7 @@ class RestController extends Controller
 		$history->save();
 
 		$partner = Candidate_engineer::with(['interview'])->
-				select('name','id','identifier','latest_education')
+				select('name','id','identifier','latest_education','status')
 				->where('id',$req->id_candidate)->first();
 
 		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;
@@ -631,7 +632,12 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
+		if ($req->status == "Reject") {
+			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Sorry! You`re not confirmed.'));
+		}else{
+			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
+		}
+		
 
 		return 'success';
 	}
@@ -707,7 +713,10 @@ class RestController extends Controller
 		// $update = Candidate_engineer::where('id',$req->id_candidate)->first();
 		// $update->status 	= $req->status;
 		// $update->update();
-		$link = json_decode($this->WebexPostApi($req->interview_date, Carbon::parse($req->interview_date)->addHour()->toDateTimeString()),true);
+		$link = json_decode($this->WebexPostApi(
+			Carbon::parse($req->interview_date)->format('Y-m-d\TH:i:sP'), 
+			Carbon::parse($req->interview_date)->addHour()->format('Y-m-d\TH:i:sP')),
+			true);
 
 		$webLink = $link["webLink"];
 
@@ -748,7 +757,7 @@ class RestController extends Controller
 	    $response =  $client->request('POST', $url, [
 			'headers' => [
 				'Content-Type'     => 'application/json',
-				'Authorization'      => 'Bearer NWFmMjBlODEtMzU5Yy00NzBlLWExYWQtZDg4ZjRhN2JmY2Q3MTE2ZmFlNGUtMzMz_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
+				'Authorization'      => 'Bearer NDU3Njg4ZmEtYjEzNy00NDlhLTllYjctNTczYTczNmFjMWMzZTAxZjVmYTYtOTlm_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
 			],'json' => [
 				  "title" => "Partner Interview Schedule",
 				  "agenda" => "Partner Interview Schedule Agenda",
@@ -901,11 +910,15 @@ class RestController extends Controller
 			$request_item->status_item = 'Done';
 			$request_item->update();
 
+			$this->getTokenToNotification($req->id_engineer,'Request Item Approve','Your request for ' . $request_item->name_item . ' has been approved, please proceed with the purchase');
+
 		}else{
 
 			$request_item = Job_request_item::where('id_history',$req->id_history)->first();
 			$request_item->status_item = 'Rejected';
 			$request_item->update();
+
+			$this->getTokenToNotification($req->id_engineer,'Request Item Rejected','Your request for ' . $request_item->name_item . ' has been rejected, you can contact the moderator for more details');
 		}
 		
 
@@ -919,17 +932,23 @@ class RestController extends Controller
 			$request_support->status = 'Progress';
 			$request_support->update();
 
+			// $this->getTokenToNotification($req->id_engineer,'Request Support Approve','Your request for assistance has been approved, you can start it in the support menu');
+
 		}else if ($req->status == 'done') {
 
 			$request_support = Job_request_support::where('id',$req->id_support)->first();
 			$request_support->status = 'Done';
 			$request_support->update();
 
-		}else{
+			// $this->getTokenToNotification($req->id_engineer,'Request Support Completed','Your request for assistance has been completed, please continue your work');
 
+		}else{
 			$request_support = Job_request_support::where('id',$req->id_support)->first();
 			$request_support->status = 'Reject';
 			$request_support->update();
+
+			// $this->getTokenToNotification($req->id_engineer,'Request Support Rejected','Your request for assistance has been rejected, you can contact the moderator for more details');
+
 		}
 		
 
@@ -964,17 +983,25 @@ class RestController extends Controller
 	}
 
 	public function postNewEngineer(Request $req){
+		$partner = Candidate_engineer::with(['interview'])->select('name','email','id','identifier','status','latest_education','ktp_nik','date_of_birth')
+				->where('id',$req->id_candidate)->first();
+
+		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;
+
+		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
+				->orderBy('history_date','DESC')->get();
+
 		$engineer = new Users();
 		$engineer->id_type  		= $req->id_type;
 		$engineer->name 			= $req->name_eng;
 		$engineer->email 			= $req->email_eng;
 		$engineer->address 			= $req->adress_eng;
-		$engineer->nik 				= 524345987;
+		$engineer->nik 				= $partner->ktp_nik;
 		$engineer->photo			= "";
 		$engineer->pleace_of_birth 	= "";
-		$engineer->date_of_birth 	= "2000-04-14";
+		$engineer->date_of_birth 	= $partner->date_of_birth;
 		$engineer->phone 			= $req->phone_eng;
-		$engineer->password = Hash::make("asdasdasd");
+		$engineer->password = Hash::make("sinergy");
 		$engineer->save();
 
 		$engineer_loc = new Engineer_location();
@@ -1009,14 +1036,6 @@ class RestController extends Controller
 			$history->history_date 		= Carbon::now()->toDateTimeString();
 			$history->save();
 		}
-
-		$partner = Candidate_engineer::with(['interview'])->select('name','id','identifier','status','latest_education')
-				->where('id',$req->id_candidate)->first();
-
-		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;
-
-		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
-				->orderBy('history_date','DESC')->get();
 
 		Mail::to($req->email_eng)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats, This is your new account!'));
 		
@@ -1131,7 +1150,7 @@ class RestController extends Controller
 			$applyer_reject->save();
 		}
 
-		// $this->getTokenToNotification($req->id_engineer,'Job Approvement','Congrats!! '.$user->name.', you got a new job ('.$jobs->job_name.')');
+		$this->getTokenToNotification($req->id_engineer,'Job Approvement','Congrats!! '.$user->name.', you got a new job ('.$jobs->job_name.')');
 
 		return $history;
 	}
@@ -1148,7 +1167,7 @@ class RestController extends Controller
 
 		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
 
-		$this->getTokenToNotification($engineer_applyer,'Job Reviewed','Hei, your job has been reviewed!');
+		$this->getTokenToNotification($engineer_applyer,'Job Reviewed','Hi, your job has been reviewed!');
 	}
 
 	public function postFinishedByModerator(Request $req){
@@ -1163,7 +1182,7 @@ class RestController extends Controller
 
 		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
 
-		$this->getTokenToNotification($engineer_applyer,'Job Finished','Hei, your finished job has been confirmed!');
+		$this->getTokenToNotification($engineer_applyer,'Job Finished','Hi, your finished job has been confirmed!');
 	}
 
 	public function postPayedByModeratorFirst(Request $req){
@@ -1263,7 +1282,7 @@ class RestController extends Controller
 
 		$engineer_applyer = Job::find($req->id_job)->working_engineer->id_engineer;
 
-		$this->getTokenToNotification($engineer_applyer,'Job Payment','Hei, please checking your job payment!');
+		$this->getTokenToNotification($engineer_applyer,'Job Payment','Hi, please checking your job payment!');
 
 		return $payment_history;
 	}
@@ -1311,6 +1330,7 @@ class RestController extends Controller
 		$job->id_location = $req->id_location;
 		$job->id_pic = $req->id_pic;
 		$job->job_name = $req->job_title;
+		$job->job_priority = $req->job_priority;
 		$job->job_description = $req->job_description;
 		$job->job_requrment = $req->job_requrement;
 		$job->job_location = $req->job_address;
@@ -1333,9 +1353,9 @@ class RestController extends Controller
 
 		$all_applyer = Users::where('id_type',1)->get();
 
-		// foreach ($all_applyer as $all_applyer) {
-		// 	$this->getTokenToNotification($all_applyer->id,'New Job','Hei, There`re new job available!');
-		// }
+		foreach ($all_applyer as $all_applyer) {
+			$this->getTokenToNotification($all_applyer->id,'New Job','Hi, There`re new job available!');
+		}
 		
 		return "Success";
 	}
@@ -1382,34 +1402,38 @@ class RestController extends Controller
 
 	// public function getTokenToNotification(Request $req){
 	public function getTokenToNotification($to,$messagetitle,$messagebody){
-		$scope = 'https://www.googleapis.com/auth/firebase.messaging';
-		$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
-
-		$url = env('FIREBASE_FCM_URL');
-		$client = new Client();
 		$user = Users::find($to);
 		$token = $user->fcm_token;
-		// return $token;
-		$client->request('POST', $url, [
-			'headers' => [
-				'Content-Type'     => 'application/json',
-				'Authorization'      => 'Bearer ' . $credentials->fetchAuthToken()['access_token']
-			],'json' => [
-				"message" => [
-					"token" => $token,
-					"data" => [
-						"id_user" => strval($user->id),
-						"fild2" => "asdfasdfasdfasdfasd",
-					],
-					"notification" => [
-						"body" => $messagebody,
-						"title" => $messagetitle,
-						// "data" => "dsafasdfa"
-					]
+		if($user->fcm_token != "IOS"){
+			$scope = 'https://www.googleapis.com/auth/firebase.messaging';
+			$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
 
+			$url = env('FIREBASE_FCM_URL');
+			$client = new Client();
+			// $user = Users::find($to);
+			// $token = $user->fcm_token;
+			// return $token;
+			$client->request('POST', $url, [
+				'headers' => [
+					'Content-Type'     => 'application/json',
+					'Authorization'      => 'Bearer ' . $credentials->fetchAuthToken()['access_token']
+				],'json' => [
+					"message" => [
+						"token" => $token,
+						"data" => [
+							"id_user" => strval($user->id),
+							"fild2" => "asdfasdfasdfasdfasd",
+						],
+						"notification" => [
+							"body" => $messagebody,
+							"title" => $messagetitle,
+							// "data" => "dsafasdfa"
+						]
+
+					]
 				]
-			]
-		]);
+			]);
+		}
 	}
 
 	public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b",$id_history = 0,$id_job = 1){
