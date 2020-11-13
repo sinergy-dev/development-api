@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 Route::post('api_login', 'API\UserController@login');
 // Route::post('api_token', 'API\UserController@token');
 Route::group(['middleware' => 'auth:api'], function(){
+	Route::get('check_token','API\UserController@check_token');
 	Route::post('api_token', 'API\UserController@token');
 	
 
@@ -52,6 +53,8 @@ Route::group(['middleware' => 'auth:api'], function(){
 
 	Route::get('users/getProfileDetail','API\APIRestController@getProfileDetail');
 	Route::post('users/postProfileUpdate','API\APIRestController@postProfileUpdate');
+
+	Route::get('testFirebase','API\APIRestController@testFirebase');
 	
 
 	// Route::get('job/getJobByCategory','API\APIRestController@getJobByCategory');
