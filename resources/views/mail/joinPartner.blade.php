@@ -9,7 +9,7 @@
 </style>
 <div style="color: #141414;font-family: 'Source Sans Pro','Helvetica Neue',Helvetica,Arial,sans-serif;">
 	<strong>
-		<br>Hi ({{$partner->name}})
+		<br>Hi {{$partner->name}},
 	</strong>
 	<p>
 		@if($partner->status == "On Progress")
@@ -37,7 +37,7 @@
 						<th>Link</th><td> - </td>
 					</tr>
 				</table>
-				<p><span style="color: red">or you can access that link on our website</span> <a href="{{url('https://172.16.1.200:8080/partner')}}">https://EOD.co.id</a>.</p>
+				<p><span style="color: red">or you can access that link on our website</span> <a href="{{env('CUSTOM_URL_WEB_SIFOMA')}}/partner/{{$randomString}}">EOD Web</a>.</p>
 				@else
 					@if($partner->interview->interview_result == null)
 					<strong>Don't be late, Join link interview on information below!</strong>
@@ -53,7 +53,7 @@
 							<th>Link</th><td><a href="{{$partner->interview->interview_link}}" target="_blank">{{$partner->interview->interview_link}}</a></td>
 						</tr> -->
 						<tr>
-							<th>Link</th><td> to get this link visit <a href="{{url('https://172.16.1.200:8080/partner/'.$randomString.'')}}">https://EOD.co.id/</a> </td>
+							<th>Link</th><td> to get this link visit <a href="{{env('CUSTOM_URL_WEB_SIFOMA')}}/partner/{{$randomString}}">https://EOD.co.id/</a> </td>
 						</tr>
 					</table>
 					@else
@@ -66,7 +66,8 @@
 			@endif
 		@elseif($partner->status == "OK Interview")
 		<strong>Verifying and Adding Personal Information Data!</strong>
-		<p>Please go to website  <a href="{{url('https://172.16.1.200:8080/partner/'.$randomString.'')}}">https://EOD.co.id/</a>. and <b style="color: red">accept</b> your policy!</p>
+
+		<p>Please go to website  <a href="{{env('CUSTOM_URL_WEB_SIFOMA')}}/partner/{{$randomString}}"></a>. and <b style="color: red">accept</b> your policy!</p>
 		@elseif($partner->status == "OK Partner")
 		<strong>You're now a partner of the company.</strong>
 		<p>You can pick the job based on your job category and get paid. But you can only pick the job from Sinergy Freelance App. So please download our mobile app in the play store or app store. And the following bellow is our username and password for your Sinergy Freelance App. Thank you and good luck!</p>
@@ -74,7 +75,7 @@
 		<table>
 			<tr>
 				<td><p style="color: #3490dc">Username</p></td>
-				<td>haloengineer</td>
+				<td>$partner->email</td>
 			</tr>
 			<tr>
 				<td><p style="color: #3490dc">Password</p></td>
@@ -89,11 +90,15 @@
 				<td><i>https://play.google.com/store?hl=en</i></td>
 			</tr>
 		</table>
+		@elseif($partner->status == "Reject")
+		<strong>Sorry you haven't had the opportunity to continue the next test.</strong><br>
+		<strong>keep up the spirit and keep trying! Thank's for join us and do your best.</strong>
 		@endif
 	</p>
+	@if($partner->status != "Reject")
 	<table>
 		<tr>
-			<th colspan="2" style="text-align: center;">Lastest Activity</th>
+			<th colspan="2" style="text-align: center;">Latest Activity</th>
 		</tr>
 		<?php
 			$no = 1;
@@ -119,19 +124,10 @@
 		</tr>
 	</table>
 	<br>
-	<p>Follow up to your registration progress!, Please visit to <a href="{{url('https://172.16.1.200:8080/partner/'.$randomString.'')}}">https://EOD.co.id</a>.
+	<p>Follow up to your registration progress!, Please visit to 
+	<a href="{{env('CUSTOM_URL_WEB_SIFOMA')}}/partner/{{$randomString}}">EOD Web</a>.
 	</p>
-<!-- 	<p>
-		How to get your progress information?
-		<br>
-		1. Open link <a href="{{url('https://172.16.1.200:8080/partner')}}">https://EOD.co.id</a> or copy then paste that link on browser url.<br>
-		2. After open it, select `<i style="color: red"><b>Have been join</b></i>` beside `<i>Show me</i>` button.<br>
-		3. Paste your identifier code on the column field.<br>
-		4. Press button submit.<br>
-		5. Then you'll know your lastest activity of registration stage.<br>
-		6. Thank you.
-
-	</p> -->
+	@endif
 	<p>
 		Disclaimer,
 		if you`ve trouble while next regristation, please contact us at (Ext: 384) or email development@sinergy.co.id. 
