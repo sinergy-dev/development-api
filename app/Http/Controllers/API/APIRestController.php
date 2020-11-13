@@ -112,7 +112,11 @@ class APIRestController extends Controller
 		// sleep(10);
 		return collect([
 			'job' => Job::with(['progress','customer','location','level','pic','category'])->find($req->id_job),
-			'progress' => Job_history::with('user')->where('id_job',$req->id_job)->orderBy('date_time','DESC')->get()
+			'progress' => Job_history::with('user:id,name')
+				// ->setAppends([])
+				->where('id_job',$req->id_job)
+				->orderBy('date_time','DESC')
+				->get()->each->setAppends([])
 		]);
 	}
 
@@ -120,6 +124,7 @@ class APIRestController extends Controller
 		return collect([
 			'payment' => Payment::with(['progress','lastest_progress','job'])
 				->where('payment_to',$req->user()->id)
+				->orderBy('id','DESC')
 				->get()
 		]);
 	}
@@ -130,12 +135,21 @@ class APIRestController extends Controller
 
 	public function getJobByCategory(Request $req){
 
-		$jobList = Job::with(['category','customer','location'])
-				->whereIn('id', Job_applyer::where('id_engineer',$req->user()->id)->pluck('id_job'));
+		$jobList = Job::with(['category','customer','location']);
+		
 
 		if(isset($req->job_status)){
-			$jobList->where('job_status',$req->job_status);
-		}				
+			if($req->job_status == "Ready"){
+				$jobList->where('job_status',$req->job_status);
+				$jobList->whereIn('id', Job_applyer::where('id_engineer',$req->user()->id)->where('status',"Accept")->pluck('id_job'));
+			} else {
+				$jobList->where('job_status',$req->job_status);
+				$jobList->whereIn('id', Job_applyer::where('id_engineer',$req->user()->id)->pluck('id_job'));
+			}
+		} else {
+			$jobList->whereIn('id', Job_applyer::where('id_engineer',$req->user()->id)->pluck('id_job'));
+		}
+
 
 		// return collect(['job' => Job::with(['category','customer','location'])->get()]);
 		return collect([
@@ -659,6 +673,35 @@ class APIRestController extends Controller
 			]);
 	}
 
+	public function sendNotification2($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b",$id_history = 0,$id_job = 1){
+		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-dev-key.json');
+		$firebase = (new Factory)
+			->withServiceAccount($serviceAccount)
+			->withDatabaseUri(env('FIREBASE_DATABASEURL'))
+			->create();
+
+		$refrence = 'notification2/web-notif/';
+
+		$database = $firebase->getDatabase();
+
+		$instanceDatabase = $database->getReference($refrence);
+
+		$updateDatabase = $database
+			->getReference($refrence . sizeof($instanceDatabase->getValue()))
+			// ->getReference($refrence . 0)
+			->set([
+				"to" => $to,
+				"from" => $from,
+				"title" => $title,
+				"message" => $message,
+				"showed" => "false",
+				"status" => "unread",
+				"date_time" => Carbon::now()->timestamp,
+				"history" => $id_history,
+				"job" => $id_job
+			]);
+	}
+
 	public function getJobReportPDF(Request $req){
 		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles("public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_report/")[0]));
 	}
@@ -687,5 +730,32 @@ class APIRestController extends Controller
 		} else {
 			return collect(['status' => 'Error']);
 		}
+	}
+
+	public function testFirebase(Request $req){
+		$history = new Job_history();
+		$history->id_job = $req->id_job;
+		$history->id_user = $req->user()->id;
+		$history->id_activity = 5;
+		$history->date_time = Carbon::now()->toDateTimeString();
+		$history->detail_activity = "Update Day " . 
+			(Carbon::parse(
+				Job_history::where('id_user',$req->user()->id)
+					->where('id_activity',4)
+					->where('id_job',$req->id_job)
+					->first()
+					->date_time
+				)->diffInDays(Carbon::now()
+			) + 1) . " - " . $req->detail_activity;
+		// $history->save();
+
+		$this->sendNotification(
+			'moderator@sinergy.co.id',
+			Users::find($req->user()->id)->email,
+			"[Apply] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
+			Job::find($req->id_job)->job_name . " has been applied for " . $req->user()->name . ", immediately do further checks",
+			$history->id,
+			$req->id_job
+		);
 	}
 }
