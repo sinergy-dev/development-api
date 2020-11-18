@@ -45,11 +45,14 @@ use Kreait\Firebase\Database;
 
 use Google\Auth\CredentialsLoader;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+
 use Storage;
 use File;
 
 use Aws\S3\S3Client;
 use Image;
+use Log;
 
 
 class RestController extends Controller
@@ -192,6 +195,14 @@ class RestController extends Controller
 		if(isset($req->job_status)){
 			$jobList->where('job_status',$req->job_status);
 		}
+
+		return collect([
+			'job' => $jobList->get()
+		]);
+	}
+
+	public function getJobListAndSumaryEngineer(Request $req){
+		$jobList = Job::with(['category','customer','location']);
 
 		return collect([
 			'job' => $jobList->get()
@@ -423,7 +434,7 @@ class RestController extends Controller
 	}
 
 	public function getRequestitem(Request $req){
-		return Job_request_item::with(['user'])->where('id_history', $req->id_history)->get();
+		return Job_request_item::with(['engineer'])->where('id_history', $req->id_history)->get();
 	}
 
 	public function getNewPartnerList(Request $req){
@@ -585,18 +596,76 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$partner->id)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to($req->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] You`ve been Success for filling First Stage'));
+		// Mail::to($req->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] You`ve been Success for filling First Stage'));
+
+		// $this->sendNotification(
+		// 	'moderator@sinergy.co.id',
+		// 	$req->email,
+		// 	$req->name . " [Reg - Basic Join]",
+		// 	$req->name . " has been register for, immediately do further checks",
+		// 	"On Progress",
+		// 	$partner->id
+		// );
+
+		$files_pf = $req->file('portofolio_file');
+
+		// $id_candidate = Candidate_engineer::where('identifier',$req->identifier)->first()->id;
+
+		$partner = Candidate_engineer::where('id',$partner->id)->first();
+		$partner->latest_education = $req->latest_education;
+		// $partner->portofolio_file = $req->portofolio_file;
+		$partner->status = "On Progress";
+		$partner->update();
+
+		$partner_location = new Candidate_engineer_location();
+		$partner_location->id_candidate = $partner->id;
+		$partner_location->id_area 		= $req->id_area;
+		$partner_location->date_add 	= Carbon::now()->toDateTimeString();
+		$partner_location->save();
+
+		$cat = explode(",",$req->id_category);
+
+		foreach ($cat as $data) {
+			$partner_category = new Candidate_engineer_category();
+			$partner_category->id_candidate = $partner->id;
+			$partner_category->id_category 	= $data;
+			$partner_category->date_add 	= Carbon::now()->toDateTimeString();
+			$partner_category->save();
+		}
+
+		$history = new Candidate_engineer_history();
+		$history->id_candidate 		= $partner->id;
+		$history->history_status 	= $req->history_status;
+		$history->history_user 		= $req->history_user;
+		$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
+		$history->history_date 		= Carbon::now()->toDateTimeString();
+		$history->save();
+
+		$portofolio_name = "portofolio_files_". Carbon::now()->timestamp. "." .explode(".", $files_pf->getClientOriginalName())[1];
+
+		$files_pf->storeAs(
+			"public/candidate_data/" . $partner->id  . "_" . Candidate_engineer::where('id',$partner->id)->first()->name . "/portofolio/",
+			$portofolio_name
+		);
+
+		$partner->portofolio_file = "storage/candidate_data/" . $partner->id  . "_" . Candidate_engineer::where('id',$partner->id)->first()->name . "/portofolio/" .
+			$portofolio_name;
+
+		$partner->save();
 
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
-			$req->email,
-			$req->name . " [Reg - Basic Join]",
-			$req->name . " has been register for, immediately do further checks",
+			Candidate_engineer::find($partner->id )->email,
+			// Candidate_engineer::find('')$req->email,
+			Candidate_engineer::find($partner->id )->name . " [Reg - Candidate information]",
+			Candidate_engineer::find($partner->id )->name . " has been register for, immediately do further checks",
 			"On Progress",
 			$partner->id
 		);
 
-		return $partner;
+		Mail::to($req->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] You`ve been Registered'));
+
+		return 'success';
 
 	}
 
@@ -612,34 +681,68 @@ class RestController extends Controller
 		
 		$submit = Candidate_engineer::where('id',$req->id_candidate)->first();
 		$submit->status 	= $req->status;
-		// $submit->identifier = $randomString;
 		$submit->update();
+		
 
-		$history = new Candidate_engineer_history();
-		$history->id_candidate 		= $req->id_candidate;
-		$history->history_status 	= $req->history_status;
-		$history->history_user 		= $req->history_user;
-		$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
-		$history->history_date 		= Carbon::now()->toDateTimeString();
-		$history->save();
+		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;		
 
 		$partner = Candidate_engineer::with(['interview'])->
 				select('name','id','identifier','latest_education','status')
 				->where('id',$req->id_candidate)->first();
 
-		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;
+		if ($req->status == "Reject") {
+			$history = new Candidate_engineer_history();
+			$history->id_candidate 		= $req->id_candidate;
+			$history->history_status 	= $req->history_status;
+			$history->history_user 		= $req->history_user;
+			$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
+			$history->history_date 		= Carbon::now()->toDateTimeString();
+			$history->save();
 
-		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
+			$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		if ($req->status == "Reject") {
-			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Sorry! You`re not confirmed.'));
+			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,"[EOD] Sorry ! You're Rejected"));
 		}else{
-			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! You`ve been Confirmed.'));
+			$history1 = new Candidate_engineer_history();
+			$history1->id_candidate 		= $req->id_candidate;
+			$history1->history_status 	    = $req->history_status_5;
+			$history1->history_user 		= $req->history_user;
+			$history1->history_detail 	    = Candidate_engineer_history_activity::where('id',$req->history_status_5)->first()->activity_description;
+			$history1->history_date 		= Carbon::now()->toDateTimeString();
+			$history1->save();
+
+			$history = new Candidate_engineer_history();
+			$history->id_candidate 		= $req->id_candidate;
+			$history->history_status 	= $req->history_status;
+			$history->history_user 		= $req->history_user;
+			$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
+			$history->history_date 		= Carbon::now()->toDateTimeString();
+			$history->save();
+
+			$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
+				->orderBy('history_date','DESC')->get();
+			
+			$link = json_decode($this->WebexPostApi(
+			Carbon::parse($req->interview_date)->format('Y-m-d\TH:i:sP'), 
+			Carbon::parse($req->interview_date)->addHour()->format('Y-m-d\TH:i:sP')),
+			true);
+
+			$webLink = $link["webLink"];
+
+			$submit = new Candidate_engineer_interview();
+			$submit->id_candidate 		= $req->id_candidate;
+			$submit->interview_date 	= $req->interview_date;
+			$submit->interview_media 	= 'webex';
+			$submit->interview_link 	= $webLink;
+			$submit->status 			= $req->status_interview;
+			$submit->save();
+
+			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Congrats! Interview Session Scheduled'));
 		}
 		
 
-		return 'success';
+		return $partner;
 	}
 
 	//post join tidak butuh email tapi notif ke modeator
@@ -757,7 +860,7 @@ class RestController extends Controller
 	    $response =  $client->request('POST', $url, [
 			'headers' => [
 				'Content-Type'     => 'application/json',
-				'Authorization'      => 'Bearer NDU3Njg4ZmEtYjEzNy00NDlhLTllYjctNTczYTczNmFjMWMzZTAxZjVmYTYtOTlm_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
+				'Authorization'      => 'Bearer OTYyNDViYWQtODJmNi00OTVhLWE5MTgtYWNiYzA3YzQ4YjgwMzVhNGJmZGMtYTJj_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
 			],'json' => [
 				  "title" => "Partner Interview Schedule",
 				  "agenda" => "Partner Interview Schedule Agenda",
@@ -799,23 +902,23 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Interviews room has been started!'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Interview Session Scheduled, Available link'));
 
 		return $partner;
 	}
 
 	public function postResultInterview(Request $req){
-		$update_interview = Candidate_engineer_interview::where('id_candidate',$req->id_candidate)->first();
+		$update_interview 					= Candidate_engineer_interview::where('id_candidate',$req->id_candidate)->first();
 		$update_interview->interview_result = $req->interview_result;
 		$update_interview->update();
 
-		// $history = new Candidate_engineer_history();
-		// $history->id_candidate 		= $req->id_candidate;
-		// $history->history_status 	= $req->history_status;
-		// $history->history_user 		= $req->history_user;
-		// $history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
-		// $history->history_date 		= Carbon::now()->toDateTimeString();
-		// $history->save();
+		$history 					= new Candidate_engineer_history();
+		$history->id_candidate 		= $req->id_candidate;
+		$history->history_status 	= $req->history_status;
+		$history->history_user 		= $req->history_user;
+		$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
+		$history->history_date 		= Carbon::now()->toDateTimeString();
+		$history->save();
 
 		$partner = Candidate_engineer::with(['interview'])->select('name','id','identifier','status','latest_education')
 				->where('id',$req->id_candidate)->first();
@@ -825,8 +928,8 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats! Interview Result.'));
 
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Interview Result and Verifying Data Agreement'));
 
 		return 'success';
 	}	
@@ -904,53 +1007,73 @@ class RestController extends Controller
 	}
 
 	public function postStatusRequestItem(Request $req){
+		$request_item = Job_request_item::where('id_history',$req->id_history)->first();
+
 		if ($req->status == 'approve') {
-
-			$request_item = Job_request_item::where('id_history',$req->id_history)->first();
 			$request_item->status_item = 'Done';
-			$request_item->update();
-
-			$this->getTokenToNotification($req->id_engineer,'Request Item Approve','Your request for ' . $request_item->name_item . ' has been approved, please proceed with the purchase');
-
-		}else{
-
-			$request_item = Job_request_item::where('id_history',$req->id_history)->first();
+			$status = "Approve";
+			$this->getTokenToNotification($request_item->engineer->id,'Request Item Approve','Your request for ' . $request_item->name_item . ' has been approved, please proceed with the purchase');
+		} else {
 			$request_item->status_item = 'Rejected';
-			$request_item->update();
-
-			$this->getTokenToNotification($req->id_engineer,'Request Item Rejected','Your request for ' . $request_item->name_item . ' has been rejected, you can contact the moderator for more details');
+			$this->getTokenToNotification($request_item->engineer->id,'Request Item Rejected','Your request for ' . $request_item->name_item . ' has been rejected, you can contact the moderator for more details');
+			$status = "Rejected";
 		}
+
+		$request_item->update();
+
+		$history = new Job_history();
+		$history->id_job = $request_item->job->id;
+		$history->id_user = $request_item->id_engineer;
+		$history->id_activity = 5;
+		$history->date_time = Carbon::now()->toDateTimeString();
+		$history->detail_activity = "Update Day " . 
+			(Carbon::parse(
+				Job_history::where('id_user',$request_item->id_engineer)
+					->where('id_activity',4)
+					->where('id_job',$request_item->job->id)
+					->first()
+					->date_time
+				)->diffInDays(Carbon::now()
+			) + 1) . " - " . $request_item->engineer->name . " Request Support " . $status;
+		$history->save();
 		
 
 		return 'Success';
 	}
 
 	public function postStatusRequestSupport(Request $req){
+		$request_support = Job_request_support::where('id',$req->id_support)->first();
+
 		if ($req->status == 'approve') {
-
-			$request_support = Job_request_support::where('id',$req->id_support)->first();
 			$request_support->status = 'Progress';
-			$request_support->update();
-
-			// $this->getTokenToNotification($req->id_engineer,'Request Support Approve','Your request for assistance has been approved, you can start it in the support menu');
-
-		}else if ($req->status == 'done') {
-
-			$request_support = Job_request_support::where('id',$req->id_support)->first();
+			$this->getTokenToNotification($request_support->id_engineer,'Request Support Approve','Your request for assistance has been approved, you can start it in the support menu');
+			$status = "Approve";
+		} else if ($req->status == 'done') {
 			$request_support->status = 'Done';
-			$request_support->update();
-
-			// $this->getTokenToNotification($req->id_engineer,'Request Support Completed','Your request for assistance has been completed, please continue your work');
-
-		}else{
-			$request_support = Job_request_support::where('id',$req->id_support)->first();
+			$this->getTokenToNotification($request_support->id_engineer,'Request Support Completed','Your request for assistance has been completed, please continue your work');
+			$status = "Done";
+		} else{
 			$request_support->status = 'Reject';
-			$request_support->update();
-
-			// $this->getTokenToNotification($req->id_engineer,'Request Support Rejected','Your request for assistance has been rejected, you can contact the moderator for more details');
-
+			$this->getTokenToNotification($request_support->id_engineer,'Request Support Rejected','Your request for assistance has been rejected, you can contact the moderator for more details');
+			$status = "Reject";
 		}
-		
+		$request_support->update();
+
+		$history = new Job_history();
+		$history->id_job = $request_support->job->id;
+		$history->id_user = $request_support->id_engineer;
+		$history->id_activity = 5;
+		$history->date_time = Carbon::now()->toDateTimeString();
+		$history->detail_activity = "Update Day " . 
+			(Carbon::parse(
+				Job_history::where('id_user',$request_support->id_engineer)
+					->where('id_activity',4)
+					->where('id_job',$request_support->job->id)
+					->first()
+					->date_time
+				)->diffInDays(Carbon::now()
+			) + 1) . " - " . $request_support->engineer->name . " Request Support " . $status;
+		$history->save();
 
 		return 'Success';
 	}
@@ -983,6 +1106,20 @@ class RestController extends Controller
 	}
 
 	public function postNewEngineer(Request $req){
+		if ($req->id_candidate != "") {
+			$Candidate_engineer = Candidate_engineer::where('id',$req->id_candidate)->first();
+			$Candidate_engineer->status 	= 'OK Partner';
+			$Candidate_engineer->update();
+
+			$history = new Candidate_engineer_history();
+			$history->id_candidate 		= $req->id_candidate;
+			$history->history_status 	= $req->history_status;
+			$history->history_user 		= $req->history_user;
+			$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
+			$history->history_date 		= Carbon::now()->toDateTimeString();
+			$history->save();
+		}
+		
 		$partner = Candidate_engineer::with(['interview'])->select('name','email','id','identifier','status','latest_education','ktp_nik','date_of_birth')
 				->where('id',$req->id_candidate)->first();
 
@@ -1001,7 +1138,8 @@ class RestController extends Controller
 		$engineer->pleace_of_birth 	= "";
 		$engineer->date_of_birth 	= $partner->date_of_birth;
 		$engineer->phone 			= $req->phone_eng;
-		$engineer->password = Hash::make("sinergy");
+		$engineer->password         = Hash::make("sinergy");
+		$engineer->date_of_join     = Carbon::now()->toDateTimeString();
 		$engineer->save();
 
 		$engineer_loc = new Engineer_location();
@@ -1022,20 +1160,6 @@ class RestController extends Controller
 		$Engineer_level->id_level 	 	= 1;
 		$Engineer_level->date_add 	 	= Carbon::now()->toDateTimeString();
 		$Engineer_level->save();
-
-		if ($req->id_candidate != "") {
-			$Candidate_engineer = Candidate_engineer::where('id',$req->id_candidate)->first();
-			$Candidate_engineer->status 	= 'OK Partner';
-			$Candidate_engineer->update();
-
-			$history = new Candidate_engineer_history();
-			$history->id_candidate 		= $req->id_candidate;
-			$history->history_status 	= $req->history_status;
-			$history->history_user 		= $req->history_user;
-			$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
-			$history->history_date 		= Carbon::now()->toDateTimeString();
-			$history->save();
-		}
 
 		Mail::to($req->email_eng)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] Congrats, This is your new account!'));
 		
@@ -1403,37 +1527,39 @@ class RestController extends Controller
 	// public function getTokenToNotification(Request $req){
 	public function getTokenToNotification($to,$messagetitle,$messagebody){
 		$user = Users::find($to);
-		$token = $user->fcm_token;
-		if($user->fcm_token != "IOS"){
+		if(isset($user->fcm_token)){
+			$token = $user->fcm_token;
 			$scope = 'https://www.googleapis.com/auth/firebase.messaging';
 			$credentials = CredentialsLoader::makeCredentials($scope, json_decode(file_get_contents(__DIR__ . '/eod-dev-firebase-adminsdk.json'), true));
 
 			$url = env('FIREBASE_FCM_URL');
-			$client = new Client();
-			// $user = Users::find($to);
-			// $token = $user->fcm_token;
-			// return $token;
-			$client->request('POST', $url, [
-				'headers' => [
-					'Content-Type'     => 'application/json',
-					'Authorization'      => 'Bearer ' . $credentials->fetchAuthToken()['access_token']
-				],'json' => [
-					"message" => [
-						"token" => $token,
-						"data" => [
-							"id_user" => strval($user->id),
-							"fild2" => "asdfasdfasdfasdfasd",
-						],
-						"notification" => [
-							"body" => $messagebody,
-							"title" => $messagetitle,
-							// "data" => "dsafasdfa"
+			try {
+				$client = new Client();
+				$client->request('POST', $url, [
+					'headers' => [
+						'Content-Type'     => 'application/json',
+						'Authorization'      => 'Bearer ' . $credentials->fetchAuthToken()['access_token']
+					],'json' => [
+						"message" => [
+							"token" => $token,
+							"data" => [
+								"id_user" => strval($user->id),
+							],
+							"notification" => [
+								"body" => $messagebody,
+								"title" => $messagetitle,
+							]
 						]
-
 					]
-				]
-			]);
+				]);
+			} catch (RequestException $e){
+				// $error['error'] = $e->getMessage();
+				Log::warning($user->name . " Cannot recive notification - " . $e->getMessage());
+			}
+		} else {
+			Log::warning($user->name . " Cannot recive notification - Because FCM Token is null");
 		}
+		
 	}
 
 	public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b",$id_history = 0,$id_job = 1){
