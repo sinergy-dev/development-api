@@ -54,6 +54,8 @@ use Aws\S3\S3Client;
 use Image;
 use Log;
 
+use Cache;
+
 
 class RestController extends Controller
 {
@@ -558,16 +560,17 @@ class RestController extends Controller
 	        $randomString .= $characters[rand(0, $charactersLength - 1)];
 	    }
 
-		$partner = new Candidate_engineer();
-		$partner->name = $req->name;
-		$partner->email = $req->email;
-		$partner->phone = $req->phone;
-		$partner->address = $req->address;
-		$partner->ktp_nik = $req->ktp_nik;
-		$partner->date_of_birth = $req->date_of_birth;
-		$partner->identifier = $randomString;
-		$partner->ktp_files = "public/data/image.jpg";
-		$partner->status = "On Progress";
+		$partner 					= new Candidate_engineer();
+		$partner->name 				= $req->name;
+		$partner->email 			= $req->email;
+		$partner->phone 			= $req->phone;
+		$partner->address 			= $req->address;
+		$partner->ktp_nik 			= $req->ktp_nik;
+		$partner->place_of_birth 	= $req->place_of_birth;
+		$partner->date_of_birth 	= $req->date_of_birth;
+		$partner->identifier 		= $randomString;
+		$partner->ktp_files 		= "public/data/image.jpg";
+		$partner->status 			= "On Progress";
 		$partner->save();
 
 		$ktp_name = "ktp_files_". Carbon::now()->timestamp. "." .explode(".", $files_ktp->getClientOriginalName())[1];
@@ -581,20 +584,9 @@ class RestController extends Controller
 			$ktp_name;
 		$partner->save();
 
-		$history = new Candidate_engineer_history();
-		$history->id_candidate 		= $partner->id;
-		$history->history_status 	= $req->history_status;
-		$history->history_user 		= $req->history_user;
-		$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
-		$history->history_date 		= Carbon::now()->toDateTimeString();
-		$history->save();
-
 		$partner = Candidate_engineer::
 				select('name','id','identifier','status')
 				->where('id',$partner->id)->first();
-
-		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$partner->id)
-				->orderBy('history_date','DESC')->get();
 
 		// Mail::to($req->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD-App] You`ve been Success for filling First Stage'));
 
@@ -663,6 +655,9 @@ class RestController extends Controller
 			$partner->id
 		);
 
+		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$partner->id)
+				->orderBy('history_date','DESC')->get();
+
 		Mail::to($req->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] You`ve been Registered'));
 
 		return 'success';
@@ -684,11 +679,8 @@ class RestController extends Controller
 		$submit->update();
 		
 
-		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;		
-
-		$partner = Candidate_engineer::with(['interview'])->
-				select('name','id','identifier','latest_education','status')
-				->where('id',$req->id_candidate)->first();
+		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;
+		
 
 		if ($req->status == "Reject") {
 			$history = new Candidate_engineer_history();
@@ -704,13 +696,16 @@ class RestController extends Controller
 
 			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,"[EOD] Sorry ! You're Rejected"));
 		}else{
-			$history1 = new Candidate_engineer_history();
-			$history1->id_candidate 		= $req->id_candidate;
-			$history1->history_status 	    = $req->history_status_5;
-			$history1->history_user 		= $req->history_user;
-			$history1->history_detail 	    = Candidate_engineer_history_activity::where('id',$req->history_status_5)->first()->activity_description;
-			$history1->history_date 		= Carbon::now()->toDateTimeString();
-			$history1->save();
+			if ($req->history_status_5 != null) {
+				# code...
+				$history1 = new Candidate_engineer_history();
+				$history1->id_candidate 		= $req->id_candidate;
+				$history1->history_status 	    = $req->history_status_5;
+				$history1->history_user 		= $req->history_user;
+				$history1->history_detail 	    = Candidate_engineer_history_activity::where('id',$req->history_status_5)->first()->activity_description;
+				$history1->history_date 		= Carbon::now()->toDateTimeString();
+				$history1->save();
+			}
 
 			$history = new Candidate_engineer_history();
 			$history->id_candidate 		= $req->id_candidate;
@@ -719,9 +714,6 @@ class RestController extends Controller
 			$history->history_detail 	= Candidate_engineer_history_activity::where('id',$req->history_status)->first()->activity_description;
 			$history->history_date 		= Carbon::now()->toDateTimeString();
 			$history->save();
-
-			$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
-				->orderBy('history_date','DESC')->get();
 			
 			$link = json_decode($this->WebexPostApi(
 			Carbon::parse($req->interview_date)->format('Y-m-d\TH:i:sP'), 
@@ -735,8 +727,15 @@ class RestController extends Controller
 			$submit->interview_date 	= $req->interview_date;
 			$submit->interview_media 	= 'webex';
 			$submit->interview_link 	= $webLink;
-			$submit->status 			= $req->status_interview;
+			$submit->status 			= 'not started';
 			$submit->save();
+
+			$partner = Candidate_engineer::with(['interview'])->
+				select('name','id','identifier','latest_education','status')
+				->where('id',$req->id_candidate)->first();
+
+			$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
+				->orderBy('history_date','DESC')->get();
 
 			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Congrats! Interview Session Scheduled'));
 		}
@@ -816,10 +815,10 @@ class RestController extends Controller
 		// $update = Candidate_engineer::where('id',$req->id_candidate)->first();
 		// $update->status 	= $req->status;
 		// $update->update();
-		$link = json_decode($this->WebexPostApi(
-			Carbon::parse($req->interview_date)->format('Y-m-d\TH:i:sP'), 
-			Carbon::parse($req->interview_date)->addHour()->format('Y-m-d\TH:i:sP')),
-			true);
+		// $link = json_decode($this->WebexPostApi(
+		// 	Carbon::parse($req->interview_date)->format('Y-m-d\TH:i:sP'), 
+		// 	Carbon::parse($req->interview_date)->addHour()->format('Y-m-d\TH:i:sP')),
+		// 	true);
 
 		$webLink = $link["webLink"];
 
@@ -857,23 +856,60 @@ class RestController extends Controller
 		$client = new Client();
 	    $url = "https://webexapis.com/v1/meetings";
 
+	    $token = $this->getWebexAccessToken();
+
 	    $response =  $client->request('POST', $url, [
 			'headers' => [
 				'Content-Type'     => 'application/json',
-				'Authorization'      => 'Bearer OTYyNDViYWQtODJmNi00OTVhLWE5MTgtYWNiYzA3YzQ4YjgwMzVhNGJmZGMtYTJj_P0A1_0a3c49be-fce4-4450-8609-1ef1499b8df4' 
+				'Authorization'      =>  $token
 			],'json' => [
 				  "title" => "Partner Interview Schedule",
-				  "agenda" => "Partner Interview Schedule Agenda",
+				  // "agenda" => "Partner Interview Schedule Agenda",
 				  "password" => "3101",
 				  "start" => $start_date,
 				  "end" => $end_date,
 				  "enabledAutoRecordMeeting" => true,
-				  "allowAnyUserToBeCoHost" => true
+				  "allowAnyUserToBeCoHost" => false
 				
 			]
 		]);
 
 		return $response->getBody();
+	}
+
+	public function getWebexAccessToken(){
+		if(Cache::store('file')->has('webex_access_token')){
+			Log::info('Webex Access Token still falid');
+			return "Bearer " . Cache::store('file')->get('webex_access_token');
+		} else {
+			Log::error('Webex Access Token not falid. Try to refresh token');
+			$client = new Client();
+			$response = $client->request(
+				'POST',
+				'https://webexapis.com/v1/access_token',
+				[
+					'headers' => [
+						'Content-Type' => 'application/x-www-form-urlencoded',
+					],
+					'form_params' => [
+						'grant_type' => 'refresh_token',
+						'client_id' => env('WEBEX_CLIENT_ID'),
+						'client_secret' => env('WEBEX_CLIENT_SECRET'),
+						'refresh_token' => env('WEBEX_REFRESH_TOKEN')
+					]
+				]
+			);
+
+			$response = json_decode($response->getBody());
+
+			if(isset($response->access_token)){
+				Log::info('Refresh Token success. Save token to cache file');
+				Cache::store('file')->put('webex_access_token',$response->access_token,now()->addSeconds($response->expires_in));
+				return "Bearer " . Cache::store('file')->get('webex_access_token');
+			} else {
+				Log::error('Refresh Token failed. Please to try change "refresh token"');
+			}
+		}
 	}
 
 	//email ke partner
@@ -911,6 +947,10 @@ class RestController extends Controller
 		$update_interview 					= Candidate_engineer_interview::where('id_candidate',$req->id_candidate)->first();
 		$update_interview->interview_result = $req->interview_result;
 		$update_interview->update();
+
+		$partner = Candidate_engineer::where('id',$req->id_candidate)->first();
+		$partner->status = "OK Interview";
+		$partner->update();
 
 		$history 					= new Candidate_engineer_history();
 		$history->id_candidate 		= $req->id_candidate;
@@ -1028,13 +1068,13 @@ class RestController extends Controller
 		$history->date_time = Carbon::now()->toDateTimeString();
 		$history->detail_activity = "Update Day " . 
 			(Carbon::parse(
-				Job_history::where('id_user',$request_item->id_engineer)
+				substr(Job_history::where('id_user',$request_item->id_engineer)
 					->where('id_activity',4)
 					->where('id_job',$request_item->job->id)
 					->first()
 					->date_time
-				)->diffInDays(Carbon::now()
-			) + 1) . " - " . $request_item->engineer->name . " Request Support " . $status;
+				,0,10))->diffInDays(Carbon::now()
+			) + 1) . " - " . $request_item->engineer->name . " Request Item " . $status;
 		$history->save();
 		
 
@@ -1055,7 +1095,7 @@ class RestController extends Controller
 		} else{
 			$request_support->status = 'Reject';
 			$this->getTokenToNotification($request_support->id_engineer,'Request Support Rejected','Your request for assistance has been rejected, you can contact the moderator for more details');
-			$status = "Reject";
+			$status = "Rejected";
 		}
 		$request_support->update();
 
@@ -1066,12 +1106,12 @@ class RestController extends Controller
 		$history->date_time = Carbon::now()->toDateTimeString();
 		$history->detail_activity = "Update Day " . 
 			(Carbon::parse(
-				Job_history::where('id_user',$request_support->id_engineer)
+				substr(Job_history::where('id_user',$request_support->id_engineer)
 					->where('id_activity',4)
 					->where('id_job',$request_support->job->id)
 					->first()
 					->date_time
-				)->diffInDays(Carbon::now()
+				,0,10))->diffInDays(Carbon::now()
 			) + 1) . " - " . $request_support->engineer->name . " Request Support " . $status;
 		$history->save();
 
@@ -1120,7 +1160,7 @@ class RestController extends Controller
 			$history->save();
 		}
 		
-		$partner = Candidate_engineer::with(['interview'])->select('name','email','id','identifier','status','latest_education','ktp_nik','date_of_birth')
+		$partner = Candidate_engineer::with(['interview'])->select('name','email','id','identifier','status','latest_education','ktp_nik','date_of_birth','place_of_birth')
 				->where('id',$req->id_candidate)->first();
 
 		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;
@@ -1135,7 +1175,7 @@ class RestController extends Controller
 		$engineer->address 			= $req->adress_eng;
 		$engineer->nik 				= $partner->ktp_nik;
 		$engineer->photo			= "";
-		$engineer->pleace_of_birth 	= "";
+		$engineer->pleace_of_birth 	= $partner->place_of_birth;
 		$engineer->date_of_birth 	= $partner->date_of_birth;
 		$engineer->phone 			= $req->phone_eng;
 		$engineer->password         = Hash::make("sinergy");
@@ -1217,12 +1257,12 @@ class RestController extends Controller
 		$history->date_time = Carbon::now()->toDateTimeString();
 		$history->detail_activity = "Update Day " . 
 			(Carbon::parse(
-				Job_history::where('id_user',$req->id_engineer)
+				substr(Job_history::where('id_user',$req->id_engineer)
 					->where('id_activity',4)
 					->where('id_job',$req->id_job)
 					->first()
 					->date_time
-				)->diffInDays(Carbon::now()
+				,0,10))->diffInDays(Carbon::now()
 			) + 1) . " - " . $req->detail_activity;
 		$history->save();
 		return $history;
@@ -1438,21 +1478,44 @@ class RestController extends Controller
 	}
 
 	public function getParameterFinalize(Request $req){
-		return array(
-			"location" => Location::find($req->id_location)->long_location,
-			"pic" => Job_pic::find($req->id_pic)->pic_name . " [" . Job_pic::find($req->id_pic)->pic_phone . "]",
-			"pic_email" => Job_pic::find($req->id_pic)->pic_mail,
-			"category" => Job_category::find($req->id_category)->text_category,
-		);
+		if ($req->id_pic == null) {
+			return array(
+				"location" => Location::find($req->id_location)->long_location,
+				// "pic" => Job_pic::find($req->id_pic)->pic_name . " [" . Job_pic::find($req->id_pic)->pic_phone . "]",
+				// "pic_email" => Job_pic::find($req->id_pic)->pic_mail,
+				"category" => Job_category::find($req->id_category)->text_category,
+			);
+		}else{
+			return array(
+				"location" => Location::find($req->id_location)->long_location,
+				"pic" => Job_pic::find($req->id_pic)->pic_name . " [" . Job_pic::find($req->id_pic)->pic_phone . "]",
+				"pic_email" => Job_pic::find($req->id_pic)->pic_mail,
+				"category" => Job_category::find($req->id_category)->text_category,
+			);
+		}
+		
 	}
 
 	public function postPublishJobs(Request $req){
+		if ($req->id_pic == "") {
+			$job_pic = new job_pic();
+			$job_pic->pic_name  = $req->job_pic_Name;
+			$job_pic->pic_mail  = $req->job_pic_Email;
+			$job_pic->pic_phone = $req->job_pic_Contact;
+			$job_pic->date_add  = Carbon::now()->toDateTimeString();
+			$job_pic->save();
+		}		
+		
 		$job = new Job();
 		$job->id_category = $req->id_category;
 		$job->id_customer = $req->id_client;
 		$job->id_level = $req->id_level;
 		$job->id_location = $req->id_location;
-		$job->id_pic = $req->id_pic;
+		if ($req->id_pic == "") {
+			$job->id_pic = $job_pic->id;
+		}else{
+			$job->id_pic = $req->id_pic;
+		}
 		$job->job_name = $req->job_title;
 		$job->job_priority = $req->job_priority;
 		$job->job_description = $req->job_description;
@@ -1461,7 +1524,7 @@ class RestController extends Controller
 		$job->job_status = "Open";
 		$job->job_price = $req->job_payment_base;
 		$job->date_start = $req->job_duration_start . " 00:00:00.000000";
-		$job->date_end = $req->job_duration_start . " 00:00:00.000000";
+		$job->date_end = $req->job_duration_end . " 00:00:00.000000";
 		$job->date_add = Carbon::now()->toDateTimeString();
 
 		$job->save();
@@ -1482,6 +1545,32 @@ class RestController extends Controller
 		}
 		
 		return "Success";
+	}
+
+	public function postPublishJobsEdit(Request $req){
+		if ($req->id_pic == "") {
+			if ($req->job_pic_Name != "") {
+				$job_pic = new job_pic();
+				$job_pic->pic_name  = $req->job_pic_Name;
+				$job_pic->pic_mail  = $req->job_pic_Email;
+				$job_pic->pic_phone = $req->job_pic_Contact;
+				$job_pic->date_add  = Carbon::now()->toDateTimeString();
+				$job_pic->save();
+			}
+		}
+
+		$update 				= Job::where('id',$req->id_job)->first();
+		$update->date_start 	= $req->job_duration_start . " 00:00:00.000000";
+		$update->date_end 		= $req->job_duration_end . " 00:00:00.000000";
+		$update->job_location   = $req->job_address;
+		if ($req->id_pic == "") {
+			if ($req->job_pic_Name != "") {
+				$update->id_pic = $job_pic->id;
+			}
+		}else{
+			$update->id_pic = $req->id_pic;
+		}
+		$update->update();		
 	}
 
 	public function postQRRecive(Request $req){
