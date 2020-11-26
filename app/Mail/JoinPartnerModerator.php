@@ -34,7 +34,25 @@ class JoinPartnerModerator extends Mailable
      */
     public function build()
     {
-        return $this->subject($this->customSubject)
-        ->view('mail.joinPartner');
+        if ($this->partner->status == "On Progress") {
+            return $this->subject($this->customSubject)
+            ->view('mail.fillProgress');
+        }else if($this->partner->status == "OK Advance"){
+            return $this->subject($this->customSubject)
+            ->view('mail.uploadProgress');
+        }else if($this->partner->status == "OK Interview"){
+            return $this->subject($this->customSubject)
+            ->view('mail.resultsProgress');
+        }else if($this->partner->status == "OK Agreement"){
+            return $this->subject($this->customSubject)
+            ->view('mail.joinPartner');
+        }else if($this->partner->status == "OK Partner"){
+            return $this->subject($this->customSubject)
+            ->view('mail.partnerProgress');
+        }else{
+            return $this->subject($this->customSubject)
+            ->view('mail.rejectedProgress');
+        }
+        
     }
 }
