@@ -54,6 +54,6 @@ class Candidate_engineer extends Model
 	}
 
 	public function getLastHistoryAttribute(){
-		return Candidate_engineer_history::where('id_candidate',$this->id)->orderBy('history_date','DESC')->first()['history_status'];
+		return Candidate_engineer_history::where('id_candidate',$this->id)->orderBy('history_date','DESC')->first()['history_date'];
 	}
 }
