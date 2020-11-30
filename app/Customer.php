@@ -31,4 +31,8 @@ class Customer extends Model
 	public function getLocationClientAttribute(){
 		return Location::where('id',$this->location)->first();
 	}
+
+	public function pic(){
+		return $this->hasMany('App\Job_pic','id_customer','id');
+	}
 }
