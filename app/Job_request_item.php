@@ -31,10 +31,16 @@ class Job_request_item extends Model
 		'invoice_item',
 		'status_item',
 		'price_item',
+		'documentation_success',
+		'note_success ',
 		'date_add'
 	];
 
-	public function user(){
+	public function job(){
+		return $this->hasOne('App\Job','id','id_job');
+	}
+
+	public function engineer(){
 		return $this->hasOne('App\Users','id','id_engineer');
 	}
 
