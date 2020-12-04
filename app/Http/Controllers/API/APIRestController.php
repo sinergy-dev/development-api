@@ -17,6 +17,7 @@ use App\Job_pic;
 use App\Job_review;
 use App\Job_request_item;
 use App\Job_request_support;
+use App\Job_chat_moderator;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
@@ -62,6 +63,28 @@ class APIRestController extends Controller
 
 	public function getJobListAndSumary(Request $req){
 		return collect(['job' => Job::with(['customer','location','category'])->get()]);
+	}
+
+	public function getJobListAndSumaryEngineer(Request $req){
+		$jobList = Job::with(['category','customer','location']);
+		$jobList->where('job_status',"Open");
+
+		// if(!isset($req->days)){
+		$req->days = 6;
+			$date = Carbon::now();
+			$jobList->whereBetween('date_start',[$date->format("Y-m-d"),$date->addDays($req->days)->format("Y-m-d")]);
+			// $jobList->whereBetween('date_end',[$date->format("Y-m-d"),$date->addDays($req->days)->format("Y-m-d")]);
+		// }
+
+		$jobList->whereNotIn('id',
+			Job_applyer::where('id_engineer',$req->user()->id)
+				->where('Status','Pending')
+				->pluck('id_job')
+			);
+
+		return collect([
+			'job' => $jobList->get()
+		]);
 	}
 
 	public function getJobListRecomended(Request $req){
@@ -110,19 +133,30 @@ class APIRestController extends Controller
 
 	public function getJobProgress(Request $req){
 		// sleep(10);
+
+		$job = Job::with(['progress','customer','location','level','pic','category'])->find($req->id_job);
+		$job_request = Job_request_item::where('id_job',$req->id_job);
+		if($job_request->count() > 0){
+			$latest_job_request = $job_request->orderBy('id','DESC')->first();
+			$latest_job_request->documentation_item_url = env('APP_URL') . "/" . $latest_job_request->documentation_item;
+			$job->latest_job_request = $latest_job_request;
+		} else {
+			$job->latest_job_request = collect(["status_item" => "None"]);
+		}
+
 		return collect([
-			'job' => Job::with(['progress','customer','location','level','pic','category'])->find($req->id_job),
+			'job' => $job,
 			'progress' => Job_history::with('user:id,name')
 				// ->setAppends([])
 				->where('id_job',$req->id_job)
-				->orderBy('date_time','DESC')
+				->orderBy('date_time','ASC')
 				->get()->each->setAppends([])
 		]);
 	}
 
 	public function getJobPayment(Request $req){
 		return collect([
-			'payment' => Payment::with(['progress','lastest_progress','job'])
+			'payment' => Payment::with(['progress','job'])
 				->where('payment_to',$req->user()->id)
 				->orderBy('id','DESC')
 				->get()
@@ -216,16 +250,17 @@ class APIRestController extends Controller
 		$history->id_user = $req->user()->id;
 		$history->id_activity = 5;
 		$history->date_time = Carbon::now()->toDateTimeString();
-		$history->detail_activity = "Update Day " . 
-			(Carbon::parse(
-				Job_history::where('id_user',$req->user()->id)
-					->where('id_activity',4)
-					->where('id_job',$req->id_job)
-					->first()
-					->date_time
-				)->diffInDays(Carbon::now()
-			) + 1) . " - " . $req->detail_activity;
+		$history->detail_activity = "Update Day " . (Carbon::parse(substr(Job_history::where('id_user',$req->user()->id)->where('id_activity',4)->where('id_job',$req->id_job)->first()->date_time,0,10))->diffInDays(Carbon::now()) + 1) . " - " . $req->detail_activity;
 		$history->save();
+
+		if(isset($req->documentation_progress)){
+			$documentation = $req->file('documentation_progress');
+			$documentation->storeAs(
+				"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/progress_documentation",
+				$documentation->getClientOriginalName()
+			);
+			// $request_item->documentation_item = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/progress_documentation/" . $documentation->getClientOriginalName();
+		}
 
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
@@ -253,15 +288,7 @@ class APIRestController extends Controller
 		$history->id_user = $req->user()->id;
 		$history->id_activity = 5;
 		$history->date_time = Carbon::now()->toDateTimeString();
-		$history->detail_activity = "Update Day " . 
-			(Carbon::parse(
-				Job_history::where('id_user',$req->user()->id)
-					->where('id_activity',4)
-					->where('id_job',$req->id_job)
-					->first()
-					->date_time
-				)->diffInDays(Carbon::now()
-			) + 1) . " - " . ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Item";
+		$history->detail_activity = "Update Day " . (Carbon::parse(substr(Job_history::where('id_user',$req->user()->id)->where('id_activity',4)->where('id_job',$req->id_job)->first()->date_time,0,10))->diffInDays(Carbon::now()) + 1) . " - " . $req->user()->name . " Request Item";
 		$history->save();
 
 		$request_item = new Job_request_item();
@@ -279,6 +306,8 @@ class APIRestController extends Controller
 		$request_item->invoice_item = "alamat harga beli";
 		$request_item->status_item = "Requested";
 		$request_item->price_item = $req->price_item;
+		$request_item->documentation_success = "-";
+		$request_item->note_success = "-";
 		$request_item->date_add = Carbon::now()->toDateTimeString(); 
 		$request_item->save();
 
@@ -292,6 +321,49 @@ class APIRestController extends Controller
 		);
 
 		return $history;
+	}
+
+	public function postJobRequestSupportSuccess(Request $req){
+		// return Job_request_item::where('id_job',$req->id_job)
+		// 	->orderBy('id','DESC')
+		// 	->first();
+		$history = new Job_history();
+		$history->id_job = $req->id_job;
+		$history->id_user = $req->user()->id;
+		$history->id_activity = 5;
+		$history->date_time = Carbon::now()->toDateTimeString();
+		$history->detail_activity = "Update Day " . (Carbon::parse(substr(Job_history::where('id_user',$req->user()->id)->where('id_activity',4)->where('id_job',$req->id_job)->first()->date_time,0,10))->diffInDays(Carbon::now()) + 1) . " - " . $req->user()->name . " Request Item Done";
+		$history->save();
+
+		$request_item = Job_request_item::where('id_job',$req->id_job)->orderBy('id','DESC')->first();
+		
+		$documentation = $req->file('documentation_success');
+		$documentation->storeAs(
+			"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/request_item",
+			"sucess_" . $documentation->getClientOriginalName()
+		);
+		$request_item->documentation_success = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/request_item/sucess_" . $documentation->getClientOriginalName();
+		$request_item->note_success = $req->note_success;
+		$request_item->status_item = "Success";
+		$request_item->date_update = Carbon::now()->toDateTimeString(); 
+		$request_item->save();
+
+		// $this->sendNotification(
+		// 	'moderator@sinergy.co.id',
+		// 	Users::find($req->user()->id)->email,
+		// 	"[Request Item] (" . Job::with(['category','customer'])->find($req->id_job)->customer->customer_name . ")" . " " . Job::with(['category','customer'])->find($req->id_job)->job_name . " by " . $req->user()->name,
+		// 	$req->user()->name . " make requests for goods/items to continue work \n[" . Job::find($req->id_job)->job_name . "]",
+		// 	$history->id,
+		// 	$req->id_job
+		// );
+
+		// return $history;
+	}
+
+	public function getChatModerator(Request $req){
+		return collect([
+			"chat" => Job_chat_moderator::with('job')->where('id_engineer',$req->user()->id)->orderBy('id','DESC')->get()
+		]);
 	}
 
 	public function getJobSupport(Request $req){
@@ -325,15 +397,7 @@ class APIRestController extends Controller
 		$history->id_user = $req->user()->id;
 		$history->id_activity = 5;
 		$history->date_time = Carbon::now()->toDateTimeString();
-		$history->detail_activity = "Update Day " . 
-			(Carbon::parse(
-				Job_history::where('id_user',$req->user()->id)
-					->where('id_activity',4)
-					->where('id_job',$req->id_job)
-					->first()
-					->date_time
-				)->diffInDays(Carbon::now()
-			) + 1) . " - " . ucfirst(explode("@",Users::find($req->user()->id)->email)[0]) . " Request Support";
+		$history->detail_activity = "Update Day " . (Carbon::parse(substr(Job_history::where('id_user',$req->user()->id)->where('id_activity',4)->where('id_job',$req->id_job)->first()->date_time,0,10))->diffInDays(Carbon::now()) + 1) . " - " . $req->user()->name . " Request Support";
 		$history->save();
 
 		$request_support = new Job_request_support();
@@ -706,6 +770,10 @@ class APIRestController extends Controller
 		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles("public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_report/")[0]));
 	}
 
+	public function getJobBastPDF(Request $req){
+		return response()->file(str_replace("public", "storage", Storage::disk('local')->allFiles("public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_BAST/")[0]));
+	}
+
 	public function getRealTimeDatabaseSnapshot($refrence){
 		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-dev-key.json');
 		$firebase = (new Factory)
@@ -738,15 +806,7 @@ class APIRestController extends Controller
 		$history->id_user = $req->user()->id;
 		$history->id_activity = 5;
 		$history->date_time = Carbon::now()->toDateTimeString();
-		$history->detail_activity = "Update Day " . 
-			(Carbon::parse(
-				Job_history::where('id_user',$req->user()->id)
-					->where('id_activity',4)
-					->where('id_job',$req->id_job)
-					->first()
-					->date_time
-				)->diffInDays(Carbon::now()
-			) + 1) . " - " . $req->detail_activity;
+		$history->detail_activity = "Update Day " . (Carbon::parse(substr(Job_history::where('id_user',$req->user()->id)->where('id_activity',4)->where('id_job',$req->id_job)->first()->date_time,0,10))->diffInDays(Carbon::now()) + 1) . " - " . $req->detail_activity;
 		// $history->save();
 
 		$this->sendNotification(
