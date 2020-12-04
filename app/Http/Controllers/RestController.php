@@ -16,6 +16,7 @@ use App\Job_category_main;
 use App\Job_pic;
 use App\Job_letter;
 use App\Job_review;
+use App\Job_chat_moderator;
 use App\Engineer_category;
 use App\Payment;
 use App\Payment_history;
@@ -330,6 +331,54 @@ class RestController extends Controller
 		}
 	}
 
+	public function createBast(Request $req){
+		$job = Job::with(['customer','pic','category','location','level'])->find($req->id_job);
+
+		// return $job;
+
+		$last_job_letter = Job_letter::orderBy('id','DESC')->first()->id;
+
+		$number = $last_job_letter + 1;
+
+		$romawi = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+		$no_letter = "BAST/" . $number . "/" . $romawi[Carbon::now()->month - 1] . "/" . Carbon::now()->year;
+
+		$data = [
+            "footer" => env('API_LINK_CUSTOM_PUBLIC') . '/storage/image/pdf_image/footer7.png',
+    		"no_letter" => $no_letter,
+    		"job_title" => $job['job_name'],
+    		"job_category" => $job['category']['category_name'],
+    		"job_location" => $job['location']['long_location'],
+    		"job_address" => $job['job_location'],
+    		"job_description" => explode("\n",$job['job_description']),
+    		"job_requirment" => explode("\n",$job['job_requrment']),
+
+    		"name_customer"=> $job['customer']['customer_name'],
+    		"pic"=>$job['pic']['pic_name'],
+    		"location_name"=>$job['location']['location_name'],
+    		"name_moderator"=> Users::where('id',$req->id_moderator)->first()->name,
+    	];
+        
+		$bast_pdf = PDF::loadView('pdf.BAST',compact('data'));
+		$name_bast_pdf = "BAST_" . Carbon::now()->timestamp;
+		Storage::put("public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_BAST/" . $name_bast_pdf . ".pdf", $bast_pdf->output());
+
+		$review = Job_review::where('id_job',$req->id_job)->first();
+		$review->job_bast = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/job_BAST/" . $name_bast_pdf . ".pdf";
+		$review->update();
+        
+        return $bast_pdf->stream();
+    }
+
+    public function createBastTesting(Request $req){
+    	$req = new Request();
+        $req->id_moderator = 6;
+        $req->id_job    = 90;
+
+        // return $req;
+        return $this->createBast($req);
+    }
+
 	// Untuk di activity Job Detail dan Job Progress
 
 	// Dalam function di bawah ini nanti untuk frontend
@@ -400,7 +449,7 @@ class RestController extends Controller
 	}
 
 	public function getClientList(Request $req){
-		return Customer::paginate($req->per_page);
+		return Customer::with(['pic'])->paginate($req->per_page);
 	}
 
 	public function getClientListSearch(Request $req){
@@ -1001,11 +1050,26 @@ class RestController extends Controller
 	}	
 
 	public function postPartnerAgreement(Request $req){
+		$files_scanBook = $req->file('imageScanBook');
+
 		$update_interview = Candidate_engineer::where('id',$req->id_candidate)->first();
 		$update_interview->status = $req->status;
 		$update_interview->candidate_account_name 	= $req->account_name;
 		$update_interview->candidate_account_number = $req->account_number;
 		$update_interview->candidate_account_alias 	= $req->account_alias;
+		// $update_interview->book_account_files 		= $req->imageScanBook;
+		$update_interview->update();
+
+		$book_scan = "book_account". Carbon::now()->timestamp. "." .explode(".", $files_scanBook->getClientOriginalName())[1];
+
+		$files_scanBook->storeAs(
+			"public/candidate_data/" . $req->id_candidate  . "_" . Candidate_engineer::where('id',$req->id_candidate)->first()->name . "/book_account_scan/",
+			$book_scan
+		);
+
+		$update_interview->book_account_files = "storage/candidate_data/" . $req->id_candidate  . "_" . Candidate_engineer::where('id',$req->id_candidate)->first()->name . "/book_account_scan/" .
+			$book_scan;
+
 		$update_interview->update();
 
 		$history = new Candidate_engineer_history();
@@ -1041,9 +1105,33 @@ class RestController extends Controller
 		$job_pic->pic_phone 	= $req->phone;
 		$job_pic->pic_mail    	= $req->email;
 		$job_pic->date_add 		= Carbon::now()->toDateTimeString();
+		$job_pic->id_customer   = $client->id;
 		$job_pic->save();
 
 		return $client;
+	}
+
+	public function updateClient(Request $req){
+		$client = Customer::where('id',$req->id)->first();
+		$client->customer_name 	= $req->customer_name;
+		$client->address 		= $req->address;
+		$client->update();
+
+		if ($req->pic_name != "" ) {
+			$job_pic = new Job_pic();
+			$job_pic->pic_name 		= $req->pic_name;
+			$job_pic->pic_phone 	= $req->phone;
+			$job_pic->pic_mail    	= $req->email;
+			$job_pic->date_add 		= Carbon::now()->toDateTimeString();
+			$job_pic->id_customer   = $req->id;
+			$job_pic->save();
+		}		
+
+		return $client;
+	}
+
+	public function getPICbyClient(Request $req){
+		return Job_pic::where('id_customer',$req->pic)->first();
 	}
 
 	public function postStatusRequestItem(Request $req){
@@ -1319,6 +1407,60 @@ class RestController extends Controller
 		return $history;
 	}
 
+	public function getChatModeratorEach(Request $req){
+		$chat = Job_chat_moderator::where('id_job',$req->id_job)->orderBy('id','DESC');
+		if($chat->count() == 0){
+			return collect([
+				'chat_moderator' => null
+			]);
+		} else {
+			return collect([
+				'chat_moderator' => $chat->first()->setAppends([]),
+				'chat' => array_values($this->getRealTimeDatabaseSnapshot('chat_moderator/' . $chat->first()->id)->getValue()['chat'])
+			]);
+		}
+
+		// return "hahahas";
+	}
+
+	public function postChatModerator(Request $req){
+		// return "asdfasdfa";
+		$chatCheck = Job_chat_moderator::where('id_job',$req->id_job)->where('status','Open');
+		if($chatCheck->count() == 0){
+			$chat = new Job_chat_moderator();
+			$chat->id_job = $req->id_job;
+			$chat->id_engineer = Job::find($req->id_job)->apply_engineer->where('status','Accept')->first()->id_engineer;
+			$chat->status = "Open";
+			$chat->date_add = Carbon::now()->toDateTimeString();
+			$chat->date_update = Carbon::now()->toDateTimeString();
+			$chat->save();
+
+			return $chat->id;
+		} else {
+			if(isset($req->close_chat)){
+				return $this->postChatModeratorClose($chatCheck->first());
+			} else {
+				return $this->postChatModeratorUpdate($chatCheck->first());
+			}
+		}
+		
+	}
+
+	public function postChatModeratorUpdate(Job_chat_moderator $chatUpdate){
+		$chatUpdate->date_update = Carbon::now()->toDateTimeString();
+		$chatUpdate->save();
+
+		return $chatUpdate->id;
+	}
+
+	public function postChatModeratorClose(Job_chat_moderator $chatUpdate){
+		$chatUpdate->date_update = Carbon::now()->toDateTimeString();
+		$chatUpdate->status = "Close";
+		$chatUpdate->save();
+
+		return $chatUpdate->id;
+	}
+
 	public function postReviewedByModerator(Request $req){
 		$history = new Job_history();
 		$history->id_job = $req->id_job;
@@ -1465,8 +1607,8 @@ class RestController extends Controller
 		}
 	}
 
-	public function getParameterPicAll(){
-		return array("results" => Job_pic::select('id',DB::raw('CONCAT(`pic_name`," (",`pic_phone` ,")") AS `text`'))->get()->toArray());
+	public function getParameterPicAll(Request $req){
+		return array("results" => Job_pic::select('id',DB::raw('CONCAT(`pic_name`," (",`pic_phone` ,")") AS `text`'))->where('id_customer',$req->id_customer)->get()->toArray());
 	}
 
 	public function getParameterLevelAll(){
@@ -1748,5 +1890,21 @@ class RestController extends Controller
 	// 	// return DB::connection('mysql_dispatcher')->table("job")->whereRaw('`job_name` = "' . $req->where . '"')->get();
 	// 	return DB::connection('mysql_dispatcher')->table("job")->where('job_name',$req->where)->get();
 	// } 
+
+	public function getRealTimeDatabaseSnapshot($refrence){
+		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/eod-dev-key.json');
+		$firebase = (new Factory)
+			->withServiceAccount($serviceAccount)
+			->withDatabaseUri(env('FIREBASE_DATABASEURL'))
+			->create();
+
+		// $refrence = 'job_support/4/';
+
+		$database = $firebase->getDatabase();
+
+		$instanceDatabase = $database->getReference($refrence);
+
+		return $instanceDatabase->orderByKey()->getSnapshot();
+	}
 
 }
