@@ -32,6 +32,8 @@ Route::group(['middleware' => 'auth:api'], function(){
 	// Route::post('details', 'API\UserController@details');
 	Route::get('getTestCredential','API\UserController@credential' );
 	Route::get('dashboard/getDashboard','API\APIRestController@getDashboard' );
+	Route::get('dashboard/getJobListAndSumaryEngineer','API\APIRestController@getJobListAndSumaryEngineer' );
+
 	Route::get('job/getJobByCategory','API\APIRestController@getJobByCategory');
 	Route::get('job/getJobProgress','API\APIRestController@getJobProgress');
 	Route::get('job/getJobOpen','API\APIRestController@getJobOpen');
@@ -45,6 +47,8 @@ Route::group(['middleware' => 'auth:api'], function(){
 	Route::post('job/postJobUpdate','API\APIRestController@postJobUpdate');
 	Route::post('job/postJobRequestItem','API\APIRestController@postJobRequestItem');
 	Route::post('job/postJobRequestSupport','API\APIRestController@postJobRequestSupport');
+	Route::post('job/postJobRequestSupportSuccess','API\APIRestController@postJobRequestSupportSuccess');
+	Route::get('job/getChatModerator','API\APIRestController@getChatModerator');
 	Route::get('job/getJobSupport','API\APIRestController@getJobSupport');
 	Route::get('job/getJobSupportEach','API\APIRestController@getJobSupportEach');
 
