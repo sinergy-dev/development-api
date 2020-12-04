@@ -29,6 +29,7 @@ class Job_review extends Model
 		'job_countermeasure',
 		'job_documentation',
 		'job_report',
+		'job_bast',
 		'date_add'
 	];
 
