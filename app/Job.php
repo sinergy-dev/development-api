@@ -62,7 +62,7 @@ class Job extends Model
 	}
 
 	public function progress(){
-		return $this->hasMany('App\Job_history','id_job','id');
+		return $this->hasMany('App\Job_history','id_job','id')->orderBy('date_time','DESC');
 	}
 
 	public function category(){
