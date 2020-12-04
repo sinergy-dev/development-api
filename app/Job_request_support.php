@@ -38,6 +38,10 @@ class Job_request_support extends Model
 		return $this->hasOne('App\Job','id','id_job');
 	}
 
+	public function engineer(){
+		return $this->hasOne('App\Users','id','id_engineer');
+	}
+
 	public function getJobCategoryAttribute(){
 		return Job_category::find($this->job->id_category);
 	}
