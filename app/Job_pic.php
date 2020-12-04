@@ -19,6 +19,7 @@ class Job_pic extends Model
 		'pic_phone',
 		'pic_mail',
 		'pic_address',
-		'date_add'
+		'date_add',
+		'id_customer'
 	];
 }
