@@ -12,20 +12,22 @@ class Users extends Model
 	
 	protected $primaryKey = 'id';
 	
-	public $timestamps = false;
+	// public $timestamps = false;
 	
 	protected $fillable = [
 		'id_type',
 		'name',
 		'password',
+		'phone',
 		'email',
 		'address',
 		'remember_token',
 		'email_verified_at',
 		'api_token',
 		'fcp_token',
-		'created_at',
-		'updated_at'
+		'date_of_join',
+		// 'created_at',
+		// 'updated_at'
 	];
 
 	protected $appends = [
@@ -74,7 +76,7 @@ class Users extends Model
 	public function getPhotoImageUrlAttribute() {
 		// storage/image/user_photo/profile(1)-min.jpg
 		// return env('APP_URL') . "/" . $this->photo;
-		return "https://sinergy-dev.xyz/" . $this->photo;
+		return env('API_LINK_CUSTOM2') . "/" . $this->photo;
 	}
 
 	public function getCategoryEngineerAttribute(){
@@ -106,7 +108,7 @@ class Users extends Model
 		if($id_type == 1){
 			// return Engineer_location:aaaaa:where(‘id_engineer’,$this->id)->first();
 			// return array_sum([1,2,3,4]);
-			return array_sum(Job::whereIn('id',Job_applyer::where('id_engineer',$this->id)->where('status','Accept')->pluck('id_job'))->pluck('job_price')->all());
+			return array_sum(Job::whereIn('id',Job_applyer::where('id_engineer',$this->id)->where('status','Accept')->pluck('id_job'))->where('job_status','Done')->pluck('job_price')->all());
 			// return Job_category::whereIn('id',Engineer_category::where('id_engineer',$this->id)->get()->pluck('id'))->get()->pluck('category_name');
 		} else {
 			return "This user is moderator";
