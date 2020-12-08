@@ -1426,10 +1426,13 @@ class RestController extends Controller
 	public function postChatModerator(Request $req){
 		// return "asdfasdfa";
 		$chatCheck = Job_chat_moderator::where('id_job',$req->id_job)->where('status','Open');
+		$engineer_applyer = Job::find($req->id_job)->apply_engineer->where('status','Accept')->first()->id_engineer;
+
+		$this->getTokenToNotification($engineer_applyer,'Moderator Send Chat', $req->message);
 		if($chatCheck->count() == 0){
 			$chat = new Job_chat_moderator();
 			$chat->id_job = $req->id_job;
-			$chat->id_engineer = Job::find($req->id_job)->apply_engineer->where('status','Accept')->first()->id_engineer;
+			$chat->id_engineer = $engineer_applyer;
 			$chat->status = "Open";
 			$chat->date_add = Carbon::now()->toDateTimeString();
 			$chat->date_update = Carbon::now()->toDateTimeString();
@@ -1440,7 +1443,7 @@ class RestController extends Controller
 			if(isset($req->close_chat)){
 				return $this->postChatModeratorClose($chatCheck->first());
 			} else {
-				return $this->postChatModeratorUpdate($chatCheck->first());
+				return $this->postChatModeratorUpdate($chatCheck->first());				
 			}
 		}
 		
