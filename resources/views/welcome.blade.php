@@ -82,6 +82,8 @@
                     Dispatcher-API
                 </div>
 
+                <!-- <img src="https://minio.sifoma.id/testing/images/PCXSSEiu5xU4donfW0ZDw3WvTJhNneur2gOO3hH3.jpeg" width="400px"> --!>
+                <img src="https://minio.sifoma.id/testing/images/FiVnjQnxfiE7LIscM3IoNjDwU0yhSKbZ6NGXBwMX.png" width="400px">
                 <div class="links">
                     <a href="https://laravel.com/docs">Documentation</a>
                     <a href="https://laracasts.com">Laracasts</a>
