@@ -7,6 +7,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Message;
 use Google\Auth\CredentialsLoader;
+use Storage;
 
 class TestController extends Controller
 {
@@ -299,5 +300,33 @@ class TestController extends Controller
 		echo $credentials->fetchAuthToken()['access_token'] . "<br>";
 		// echo "Status code " . $response->getStatusCode() . "<br>"; 
 		echo "</pre>";
+	}
+
+	public function testingMinio(Request $req) {
+		$cat_image = $req->file('image')->store('images','minio');
+
+		// $cat_image = Storage::disk('minio')->put('image/testaaa',$req->cat_image);
+		// $cat_image->storeAs(
+		// 	"image/test", 
+		// 	$cat_image->getClientOriginalName()
+		// );
+
+
+
+
+
+		// echo "<pre>path : ";
+		// print_r($cat_image);
+		// echo "\nurl : ";
+		// print_r(Storage::disk('minio')->url($cat_image));
+		// echo "</pre>";
+
+
+		// return Storage::disk('minio')->response('images/' . basename($cat_image));
+
+		return Storage::disk('minio')->url(basename($cat_image));
+
+
+		// return "hahahaha";
 	}
 }
