@@ -37,17 +37,17 @@
 
 				<table style="width: 100%">
 					<tr>
-						<th style="width: 20%;text-align: left;"><p>Username&nbsp&nbsp:</p></th>
+						<th style="width: 20%;text-align: left;"><p>Username :</p></th>
 						<td style="width: 80%"><b>{{$partner->email}}</b></td>
 					</tr>
 					<tr>
-						<th style="width: 20%;text-align: left;"><p>Password&nbsp&nbsp&nbsp:</p></th>
+						<th style="width: 20%;text-align: left;"><p>Password :</p></th>
 						<td style="width: 80%"><b>sinergy</b></td>
 					</tr>
 				</table>
 
 				<center>
-				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/appstore.png">&nbsp&nbsp&nbsp
+				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/appstore.png">
 				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/gplay.png" >
 				</center>
 
@@ -78,7 +78,7 @@
 				If you've trouble while registration, please contact us:
 			</p>
 			<center>
-				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/phone.png">&nbsp&nbsp&nbsp
+				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/phone.png">
 				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/mail.png" >
 			</center>
 			<p>

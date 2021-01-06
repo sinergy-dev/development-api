@@ -51,7 +51,7 @@
 				If you've trouble while registration, please contact us:
 			</p>
 			<center>
-				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/phone.png">&nbsp&nbsp&nbsp
+				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/phone.png">
 				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/mail.png" >
 			</center>
 			<p>
