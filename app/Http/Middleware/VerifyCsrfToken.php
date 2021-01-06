@@ -52,9 +52,9 @@ class VerifyCsrfToken extends Middleware
         'testing',
         'setting/category/postCategory',
         'setting/category/postUpdateCategory',
-        'setting/category/postCategoryMain'
+        'setting/category/postCategoryMain',
         
-     
+        'testingMinio'
 
 
         // 'dashboard/getDashboard',
