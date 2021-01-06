@@ -130,9 +130,9 @@ class Job extends Model
 		if($this->job_status != "Open"){
 			$pdf_file = Job_letter::where('id_job',$this->id)->first();
 			if (!is_null($pdf_file)) {
-				return env('API_LINK_CUSTOM2') . "/" . $pdf_file->pdf_file;
+				return env('APP_URL') . "/" . $pdf_file->pdf_file;
 			} else {
-				return "https://sinergy-dev.xyz";
+				return env('APP_URL');
 			}
 		} else {
 			return "Job not ready yet";
