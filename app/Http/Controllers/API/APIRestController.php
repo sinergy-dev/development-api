@@ -173,7 +173,7 @@ class APIRestController extends Controller
 		
 
 		if(isset($req->job_status)){
-			if($req->job_status == "Ready"){
+			if($req->job_status == "Ready" || $req->job_status == "Progress" || $req->job_status == "Done"){
 				$jobList->where('job_status',$req->job_status);
 				$jobList->whereIn('id', Job_applyer::where('id_engineer',$req->user()->id)->where('status',"Accept")->pluck('id_job'));
 			} else {
@@ -187,7 +187,7 @@ class APIRestController extends Controller
 
 		// return collect(['job' => Job::with(['category','customer','location'])->get()]);
 		return collect([
-			'job' => $jobList->get(),
+			'job' => $jobList->orderBy('id','DESC')->get(),
 			'id_engineer' => $req->user()->id]);
 	}
 
