@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use App\Mail\JoinPartnerModerator;
 
 Route::get('testing','TestController@postGuzzleRequest');
+Route::post('testingMinio','TestController@testingMinio');
 Route::get('/testWebexAccessToken','RestController@getWebexAccessToken');
 
 Route::get('testingToken','TestController@tokenTest');
