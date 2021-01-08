@@ -740,8 +740,11 @@ class RestController extends Controller
 			$history->history_date 		= Carbon::now()->toDateTimeString();
 			$history->save();
 
+			$partner = Candidate_engineer::select('name','id','identifier','latest_education','status')
+				->where('id',$req->id_candidate)->first();
+
 			$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
-				->orderBy('history_date','DESC')->get();
+				->orderBy('history_date','DESC')->get(); 
 
 			Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,"[EOD] Sorry ! You're Rejected"));
 		}else{
