@@ -90,73 +90,101 @@ class RestController extends Controller
 		$count_done = DB::connection('mysql_dispatcher')->table('job')
 					->where('job_status','Done')->count();
 
+		// return $count;
+
 		// return $count_open . "," . $count_ready . ","  . $count_progress . "," . $count_done;
 
-		if ($count_open == 0) {
-			// return "hahahaha";
-			return collect([
-				'open' => $count_open,
-				'ready' => $count[1]->count,
-				'progress' => $count[0]->count,
-				'done' => $count[2]->count,
-				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_open,
-			]);
-		
-		}else if ($count_ready == 0 ) {
+		return collect([
+			'open' => $count_open,
+			'ready' => $count_ready,
+			'progress' => $count_progress,
+			'done' => $count_done,
+			'total' => $count_open + $count_ready + $count_progress + $count_done,
+		]);
 
-			return collect([
-				'open' => $count[1]->count,
-				'ready' => $count_ready,
-				'progress' => $count[2]->count,
-				'done' => $count[0]->count,
-				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_ready,
-			]);
-		}else if ($count_ready == 0 && $count_progress == 0 && $count_done == 0) {
-			return collect([
-				'open' => $count[0]->count,
-				'ready' => $count_ready,
-				'progress' => $count_progress,
-				'done' => $count_done,
-				'total' => $count[0]->count + $count_progress + $count_ready + $count_ready,
-			]);
+		// if ($count_open == 0 && $count_ready == 0 && $count_progress == 0 && $count_done == 0) {
+		// 	return collect([
+		// 		'open' => $count_open,
+		// 		'ready' => $count_ready,
+		// 		'progress' => $count_progress,
+		// 		'done' => $count_done,
+		// 		'total' => $count_open + $count_ready + $count_progress + $count_done,
+		// 	]);
+		// }else if ($count_open == 0 && $count_ready == 0) {
+		// 	return collect([
+		// 		'open' => $count_open,
+		// 		'ready' => $count_ready,
+		// 		'progress' => $count_progress,
+		// 		'done' => $count_done,
+		// 		'total' => $count_open + $count_ready + $count_progress + $count_done,
+		// 	]);
+		// }
+
+		// if ($count_open == 0) {
+		// 	// return "hahahaha";
+		// 	return collect([
+		// 		'open' => $count_open,
+		// 		'ready' => $count[1]->count,
+		// 		'progress' => $count[0]->count,
+		// 		'done' => $count_done,
+		// 		// 'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_open,
+		// 	]);
 		
-		}else if ($count_progress == 0 && $count_done == 0) {
-			return collect([
-				'open' => $count[0]->count,
-				'ready' => $count[1]->count,
-				'progress' => $count_progress,
-				'done' => $count_done,
-				'total' => $count[0]->count + $count[1]->count + $count_ready + $count_ready,
-			]);
+		// }else if ($count_ready == 0 ) {
+
+		// 	return collect([
+		// 		'open' => $count[1]->count,
+		// 		'ready' => $count_ready,
+		// 		'progress' => $count[2]->count,
+		// 		'done' => $count[0]->count,
+		// 		'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_ready,
+		// 	]);
+		// }else if ($count_ready == 0 && $count_progress == 0 && $count_done == 0) {
+		// 	return collect([
+		// 		'open' => $count[0]->count,
+		// 		'ready' => $count_ready,
+		// 		'progress' => $count_progress,
+		// 		'done' => $count_done,
+		// 		'total' => $count[0]->count + $count_progress + $count_ready + $count_ready,
+		// 	]);
 		
-		}else if ($count_progress == 0) {
-			return collect([
-				'open' => $count[0]->count,
-				'ready' => $count[1]->count,
-				'progress' => $count_progress,
-				'done' => $count[2]->count,
-				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_progress,
-			]);
+		// }else if ($count_progress == 0 && $count_done == 0) {
+		// 	return collect([
+		// 		'open' => $count[0]->count,
+		// 		'ready' => $count[1]->count,
+		// 		'progress' => $count_progress,
+		// 		'done' => $count_done,
+		// 		'total' => $count[0]->count + $count[1]->count + $count_ready + $count_ready,
+		// 	]);
 		
-		}else if ($count_done == 0) {
-			return collect([
-				'open' => $count[0]->count,
-				'ready' => $count[1]->count,
-				'progress' => $count[2]->count,
-				'done' => $count_done,
-				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_done,
-			]);
+		// }else if ($count_progress == 0) {
+		// 	return collect([
+		// 		'open' => $count[0]->count,
+		// 		'ready' => $count[1]->count,
+		// 		'progress' => $count_progress,
+		// 		'done' => $count[2]->count,
+		// 		'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_progress,
+		// 	]);
 		
-		} else {
-			return collect([
-				'open' => $count[1]->count,
-				'ready' => $count[3]->count,
-				'progress' => $count[2]->count,
-				'done' => $count[0]->count,
-				'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count[3]->count,
-			]);
-			// return "hahahaha";
-		}
+		// }else if ($count_done == 0) {
+		// 	return collect([
+		// 		'open' => $count[0]->count,
+		// 		'ready' => $count[1]->count,
+		// 		'progress' => $count[2]->count,
+		// 		'done' => $count_done,
+		// 		'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count_done,
+		// 	]);
+		
+		// } else {
+		// 	return collect([
+		// 		'open' => $count[1]->count,
+		// 		'ready' => $count[3]->count,
+		// 		'progress' => $count[2]->count,
+		// 		'done' => $count[0]->count,
+		// 		'total' => $count[0]->count + $count[1]->count + $count[2]->count + $count[3]->count,
+		// 	]);
+		// 	// return "hahahaha";
+		// }
 
 	}
 
@@ -224,7 +252,7 @@ class RestController extends Controller
 		        ->paginate($req->per_page);
 		} else if ($req->type == "list") {
 			return Job::with(['customer','location','category'])
-				->join(DB::raw('(SELECT `id_job` ,MAX(`date_time`) as `latest_date` FROM `dispatcherapp`.`job_history` GROUP BY `id_job` ORDER BY `latest_date` DESC) AS `latest`'),'latest.id_job','=','job.id')
+				->join(DB::raw('(SELECT `id_job` ,MAX(`date_time`) as `latest_date` FROM `job_history` GROUP BY `id_job` ORDER BY `latest_date` DESC) AS `latest`'),'latest.id_job','=','job.id')
 				->orderBy('latest_date','DESC')
 				->paginate($req->per_page);
 		}
@@ -990,7 +1018,7 @@ class RestController extends Controller
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
 				->orderBy('history_date','DESC')->get();
 
-		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Interview Session Scheduled, Available link'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Interview Session Information'));
 
 		return $partner;
 	}
@@ -1021,7 +1049,7 @@ class RestController extends Controller
 				->orderBy('history_date','DESC')->get();
 
 
-		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Interview Result and Verifying Data Agreement'));
+		Mail::to(Candidate_engineer::where('id',$req->id_candidate)->first()->email)->send(new JoinPartnerModerator($randomString,$partner,$activity,'[EOD] Interview Result and Agreement'));
 
 		return 'success';
 	}	
@@ -1599,7 +1627,7 @@ class RestController extends Controller
 		return $payment_history;
 	}
 
-	public function getParameterClientAll(){
+	public function getParameterClientAll(Request $req){
 		return array("results" => Customer::select(DB::raw('`id`,`customer_name` AS `text`'))->get()->toArray());
 	}
 
