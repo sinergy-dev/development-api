@@ -11,12 +11,12 @@
 			border: none;
 		}
 
-		.centered{
+		/*.centered{
 			position: absolute;
 		  	top: 50%;
 		  	left: 50%;
 		  	transform: translate(-50%, -40%);
-		}
+		}*/
 	</style>
 	<link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
 </head>
@@ -30,10 +30,7 @@
 				<br>Hi {{$partner->name}},
 			</strong>
 			<p>
-				<p>You`re now an <b>EOD partner</b>.</p>
-				<p>You can pick the job based on your job category only from the EOD Mobile App and get paid.
-				So, please download our mobile app in the App Store or Google Play Store. The following below is your username and password for your EOD
-			Mobile App. Thank you and good luck!</p>
+				<p>You can pick the job based on your job category only from the EOD Mobile App and get paid. So, please download our mobile app in the App Store or Google Play Store. Below is your username and password for your EOD Mobile App. Thank you and good luck!</p>
 
 				<table style="width: 100%">
 					<tr>
@@ -73,9 +70,9 @@
 				<span style="padding-left: 25px;">Identifier code</span> <strong><span style="color: #FFC548">{{$randomString}}</span></strong>
 			</div>
 			<br>
-			<p>Keep updated your registration progress and please visit to <a href="{{env('CUSTOM_URL_WEB_SIFOMA')}}/partner/{{$randomString}}" target="_blank">EOD Web</a> to continue</p>
+			<p>Keep updated on your registration process and please visit to <a href="{{env('CUSTOM_URL_WEB_SIFOMA')}}/partner/{{$randomString}}" target="_blank">EOD Web</a> to continue</p>
 			<p>
-				If you've trouble while registration, please contact us:
+				If you have trouble with the registration process, please contact us:
 			</p>
 			<center>
 				<img style="width: 30%" src="{{env('API_LINK_CUSTOM2')}}/image/phone.png">
@@ -87,17 +84,10 @@
 			</p>
 		</div>
 	</div>
-	<div style="height:200px;	
-				width: 600px;
-				background-size:100% 100%;
-				background-repeat: no-repeat;color: #FFFFFF;
-				font-family: 'Montserrat',sans-serif;
-				vertical-align: middle;
-				position: relative;
-				background-image: url('{{env('API_LINK_CUSTOM2')}}/image/footer.png')">
+	<div style="height:200px; width: 600px; background-size:100% 100%; background-repeat: no-repeat;color: #FFFFFF; font-family: 'Montserrat',sans-serif; vertical-align: middle; position: relative; background-image: url('{{env('API_LINK_CUSTOM2')}}/image/footer.png')">
 		<!-- <img style="width: 100%" src="{{env('API_LINK_CUSTOM_PUBLIC')}}/image/footer.png"> -->
 		<div class="centered">
-			<b><p style="text-align: center;font-size: 12px">
+			<b><p style="text-align: center;font-size: 12px; padding-top: 80px">
 			PT. Sinergy Informasi Pratama (SIP)<br>
 			Inlingua Building 2nd Floor<br>
 			Jl. Puri Raya, Blok A 2/3 No. 33-35 Puri Indah<br>
