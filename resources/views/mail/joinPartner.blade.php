@@ -11,12 +11,12 @@
 		  border: 1px solid grey;
 		}
 
-		.centered{
+		/*.centered{
 			position: absolute;
 		  	top: 50%;
 		  	left: 50%;
 		  	transform: translate(-50%, -40%);
-		}
+		}*/
 	</style>
 	<link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
 </head>
@@ -148,22 +148,15 @@
 			</p>
 		</div>
 	</div>
-	<div style="height:200px;	
-				width: 600px;
-				background-size:100% 100%;
-				background-repeat: no-repeat;color: #FFFFFF;
-				font-family: 'Montserrat',sans-serif;
-				vertical-align: middle;
-				position: relative;
-				background-image: url('{{env('API_LINK_CUSTOM2')}}/image/footer.png')">
+	<div style="height:200px; width: 600px; background-size:100% 100%; background-repeat: no-repeat;color: #FFFFFF; font-family: 'Montserrat',sans-serif; vertical-align: middle; position: relative; background-image: url('{{env('API_LINK_CUSTOM2')}}/image/footer.png')">
 		<!-- <img style="width: 100%" src="{{env('API_LINK_CUSTOM_PUBLIC')}}/image/footer.png"> -->
-		<div class="centered"><b>
-			<p style="text-align: center;font-size: 12px">
+		<div class="centered">
+			<b><p style="text-align: center;font-size: 12px; padding-top: 80px">
 			PT. Sinergy Informasi Pratama (SIP)<br>
 			Inlingua Building 2nd Floor<br>
 			Jl. Puri Raya, Blok A 2/3 No. 33-35 Puri Indah<br>
-			Kembangan Jakarta 11610 â€“ Indonesia<br>
-			Phone 021 - 58355599<br>
+			Kembangan Jakarta 11610 Indonesia<br>
+			Phone 021 - 583 555 99<br>
 			</p></b>
 		</div>
 	</div>
