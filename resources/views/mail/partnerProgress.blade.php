@@ -39,7 +39,7 @@
 					</tr>
 					<tr>
 						<th style="width: 20%;text-align: left;"><p>Password :</p></th>
-						<td style="width: 80%"><b>sinergy</b></td>
+						<td style="width: 80%"><b>{{$partner->password_plain}}</b></td>
 					</tr>
 				</table>
 
