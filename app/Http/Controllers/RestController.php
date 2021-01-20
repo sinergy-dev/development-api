@@ -90,6 +90,13 @@ class RestController extends Controller
 		$count_done = DB::connection('mysql_dispatcher')->table('job')
 					->where('job_status','Done')->count();
 
+		$count_picked = DB::connection('mysql_dispatcher')->table('job_applyer')->select(DB::raw("(
+                        SELECT
+                            COUNT(count_job) as `count_job`
+                        FROM
+                           SELECT COUNT(*) as `count_job`,`status`,id_job FROM `eod-prod`.job_applyer WHERE status = 'ACCEPT' GROUP BY id_job 
+                      	) as count_job"))->count();
+
 		// return $count;
 
 		// return $count_open . "," . $count_ready . ","  . $count_progress . "," . $count_done;
@@ -100,6 +107,7 @@ class RestController extends Controller
 			'progress' => $count_progress,
 			'done' => $count_done,
 			'total' => $count_open + $count_ready + $count_progress + $count_done,
+			'count_picked' => $count_picked,
 		]);
 
 		// if ($count_open == 0 && $count_ready == 0 && $count_progress == 0 && $count_done == 0) {
@@ -1282,6 +1290,8 @@ class RestController extends Controller
 		$partner = Candidate_engineer::with(['interview'])->select('name','email','id','identifier','status','latest_education','ktp_nik','date_of_birth','place_of_birth')
 				->where('id',$req->id_candidate)->first();
 
+		$partner->password_plain = explode(" ",$req->name_eng)[0] . str_replace("-","",$partner->date_of_birth);
+
 		$randomString = Candidate_engineer::where('id',$req->id_candidate)->first()->identifier;
 
 		$activity = Candidate_engineer_history::select('history_detail')->where('id_candidate',$req->id_candidate)
@@ -1297,7 +1307,8 @@ class RestController extends Controller
 		$engineer->pleace_of_birth 	= $partner->place_of_birth;
 		$engineer->date_of_birth 	= $partner->date_of_birth;
 		$engineer->phone 			= $req->phone_eng;
-		$engineer->password         = Hash::make("sinergy");
+		// $engineer->password         = Hash::make("sinergy");
+		$engineer->password         = Hash::make($partner->password_plain);
 		$engineer->date_of_join     = Carbon::now()->toDateTimeString();
 		$engineer->save();
 
