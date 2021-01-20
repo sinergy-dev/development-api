@@ -251,7 +251,6 @@ class APIRestController extends Controller
 		$history->id_activity = 5;
 		$history->date_time = Carbon::now()->toDateTimeString();
 		$history->detail_activity = "Update Day " . (Carbon::parse(substr(Job_history::where('id_user',$req->user()->id)->where('id_activity',4)->where('id_job',$req->id_job)->first()->date_time,0,10))->diffInDays(Carbon::now()) + 1) . " - " . $req->detail_activity;
-		$history->save();
 
 		if(isset($req->documentation_progress)){
 			$documentation = $req->file('documentation_progress');
@@ -259,8 +258,13 @@ class APIRestController extends Controller
 				"public/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/progress_documentation",
 				$documentation->getClientOriginalName()
 			);
+			$history->image_activity = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/progress_documentation/" . $documentation->getClientOriginalName();
 			// $request_item->documentation_item = "storage/data/" . $req->id_job . "_" . str_replace(" ","_",Job::find($req->id_job)->job_name) . "_documentation/progress_documentation/" . $documentation->getClientOriginalName();
+		} else {
+			$history->image_activity = "-";
 		}
+
+		$history->save();
 
 		$this->sendNotification(
 			'moderator@sinergy.co.id',
@@ -709,7 +713,9 @@ class APIRestController extends Controller
 	}
 
 	public function sendNotification($to = "moderator@sinergy.co.id",$from = "agastya@sinergy.co.id",$title = "a",$message = "b",$id_history = 0,$id_job = 1){
-		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-dev-key.json');
+		// $serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-dev-key.json');
+		$serviceAccount = ServiceAccount::fromJsonFile(__DIR__.'/../eod-prod-key.json');
+
 		$firebase = (new Factory)
 			->withServiceAccount($serviceAccount)
 			->withDatabaseUri(env('FIREBASE_DATABASEURL'))
