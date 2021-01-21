@@ -90,12 +90,15 @@ class RestController extends Controller
 		$count_done = DB::connection('mysql_dispatcher')->table('job')
 					->where('job_status','Done')->count();
 
-		$count_picked = DB::connection('mysql_dispatcher')->table('job_applyer')->select(DB::raw("(
-                        SELECT
-                            COUNT(count_job) as `count_job`
-                        FROM
-                           SELECT COUNT(*) as `count_job`,`status`,id_job FROM `eod-prod`.job_applyer WHERE status = 'ACCEPT' GROUP BY id_job 
-                      	) as count_job"))->count();
+		// $count_picked = DB::connection('mysql_dispatcher')->table('job_applyer')->select(DB::raw("(
+  //                       SELECT
+  //                           COUNT(count_job) as `count_job`
+  //                       FROM
+  //                          SELECT COUNT(*) as `count_job` FROM `eod-prod`.job_applyer WHERE status = 'ACCEPT' 
+  //                     	) as count_job"))->count();
+
+		$count_picked = Job_applyer::where('status','Accept')->count();
+		
 
 		// return $count;
 
